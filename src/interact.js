@@ -7,6 +7,8 @@ INTERACT = (function() {
     // initialise variables
     var interactorRegistry = {};
     
+    //= require "eventmonitor"
+    
     /* internal functions */
     
     function genBinder(useBody) {
@@ -24,6 +26,24 @@ INTERACT = (function() {
             target.removeEventListener(evtName, callback, false);
         };
     } // unbindDoc
+    
+    function getHandlers(types, capabilities) {
+        var handlers = [];
+        
+        // iterate through the interactors in the registry
+        for (var key in interactorRegistry) {
+            var interactor = interactorRegistry[key],
+                selected = (! types) || (types.indexOf(key) >= 0);
+                
+            // TODO: perform capabilities check
+            
+            if (selected) {
+                handlers[handlers.length] = interactor.handler;
+            } // if
+        } // for
+        
+        return handlers;
+    } // getHandlers
 
     function ieBind(evtName, callback, customTarget) {
         (customTarget ? customTarget : document).attachEvent('on' + evtName, callback);
@@ -33,15 +53,20 @@ INTERACT = (function() {
         (customTarget ? customTarget : document).detachEvent('on' + evtName, callback);
     } // ieUnbind
     
+    function point(x, y) {
+        return {
+            x: x ? x : 0,
+            y: y ? y : 0
+        };
+    } // point
     
     /* exports */
     
     function register(typeName, opts) {
-        interactorRegistry[typename] = COG.extend({
-            attach: null,
-            detach: null,
+        interactorRegistry[typeName] = COG.extend({
+            handler: null,
             checks: {}
-        });
+        }, opts);
     } // register
     
     /**
@@ -51,6 +76,7 @@ INTERACT = (function() {
         // initialise the options
         opts = COG.extend({
             bindToBody: false,
+            observable: null,
             isIE: false,
             types: null
         }, opts);
@@ -60,13 +86,22 @@ INTERACT = (function() {
             touch: 'ontouchstart' in window
         }, caps);
         
-        // initialise the binder function
-        var binder = opts.isIE ? ieBind : genBinder(opts.bindToBody),
-            unbinder = opts.isIE ? ieUnbind : genUnbinder(opts.bindToBody),
-            interactors = getInteractors(opts.types, capabilities);
+        // check if we need to supply an observable object
+        if (! opts.observable) {
+            opts.observable = {};
+            COG.observable(opts.observable);
+        } // if
+        
+        // initialise the binder and unbinder
+        opts.binder = opts.isIE ? ieBind : genBinder(opts.bindToBody);
+        opts.unbinder = opts.isIE ? ieUnbind : genUnbinder(opts.bindToBody);
+        
+        // return the event monitor
+        return new EventMonitor(target, getHandlers(opts.types, capabilities), opts);
     } // watch
     
-    //= require "mouse"
+    //= require "interactors/pointer"
+    //= require "interactors/mouse"
     // TODO: require "touch"
     
     return {

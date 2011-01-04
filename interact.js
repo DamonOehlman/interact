@@ -1,412 +1,3 @@
-/*
-    http://www.JSON.org/json2.js
-    2010-03-20
-
-    Public Domain.
-
-    NO WARRANTY EXPRESSED OR IMPLIED. USE AT YOUR OWN RISK.
-
-    See http://www.JSON.org/js.html
-
-
-    This code should be minified before deployment.
-    See http://javascript.crockford.com/jsmin.html
-
-    USE YOUR OWN COPY. IT IS EXTREMELY UNWISE TO LOAD CODE FROM SERVERS YOU DO
-    NOT CONTROL.
-
-
-    This file creates a global JSON object containing two methods: stringify
-    and parse.
-
-        JSON.stringify(value, replacer, space)
-            value       any JavaScript value, usually an object or array.
-
-            replacer    an optional parameter that determines how object
-                        values are stringified for objects. It can be a
-                        function or an array of strings.
-
-            space       an optional parameter that specifies the indentation
-                        of nested structures. If it is omitted, the text will
-                        be packed without extra whitespace. If it is a number,
-                        it will specify the number of spaces to indent at each
-                        level. If it is a string (such as '\t' or '&nbsp;'),
-                        it contains the characters used to indent at each level.
-
-            This method produces a JSON text from a JavaScript value.
-
-            When an object value is found, if the object contains a toJSON
-            method, its toJSON method will be called and the result will be
-            stringified. A toJSON method does not serialize: it returns the
-            value represented by the name/value pair that should be serialized,
-            or undefined if nothing should be serialized. The toJSON method
-            will be passed the key associated with the value, and this will be
-            bound to the value
-
-            For example, this would serialize Dates as ISO strings.
-
-                Date.prototype.toJSON = function (key) {
-                    function f(n) {
-                        return n < 10 ? '0' + n : n;
-                    }
-
-                    return this.getUTCFullYear()   + '-' +
-                         f(this.getUTCMonth() + 1) + '-' +
-                         f(this.getUTCDate())      + 'T' +
-                         f(this.getUTCHours())     + ':' +
-                         f(this.getUTCMinutes())   + ':' +
-                         f(this.getUTCSeconds())   + 'Z';
-                };
-
-            You can provide an optional replacer method. It will be passed the
-            key and value of each member, with this bound to the containing
-            object. The value that is returned from your method will be
-            serialized. If your method returns undefined, then the member will
-            be excluded from the serialization.
-
-            If the replacer parameter is an array of strings, then it will be
-            used to select the members to be serialized. It filters the results
-            such that only members with keys listed in the replacer array are
-            stringified.
-
-            Values that do not have JSON representations, such as undefined or
-            functions, will not be serialized. Such values in objects will be
-            dropped; in arrays they will be replaced with null. You can use
-            a replacer function to replace those with JSON values.
-            JSON.stringify(undefined) returns undefined.
-
-            The optional space parameter produces a stringification of the
-            value that is filled with line breaks and indentation to make it
-            easier to read.
-
-            If the space parameter is a non-empty string, then that string will
-            be used for indentation. If the space parameter is a number, then
-            the indentation will be that many spaces.
-
-            Example:
-
-            text = JSON.stringify(['e', {pluribus: 'unum'}]);
-
-
-            text = JSON.stringify(['e', {pluribus: 'unum'}], null, '\t');
-
-            text = JSON.stringify([new Date()], function (key, value) {
-                return this[key] instanceof Date ?
-                    'Date(' + this[key] + ')' : value;
-            });
-
-
-        JSON.parse(text, reviver)
-            This method parses a JSON text to produce an object or array.
-            It can throw a SyntaxError exception.
-
-            The optional reviver parameter is a function that can filter and
-            transform the results. It receives each of the keys and values,
-            and its return value is used instead of the original value.
-            If it returns what it received, then the structure is not modified.
-            If it returns undefined then the member is deleted.
-
-            Example:
-
-
-            myData = JSON.parse(text, function (key, value) {
-                var a;
-                if (typeof value === 'string') {
-                    a =
-/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2}(?:\.\d*)?)Z$/.exec(value);
-                    if (a) {
-                        return new Date(Date.UTC(+a[1], +a[2] - 1, +a[3], +a[4],
-                            +a[5], +a[6]));
-                    }
-                }
-                return value;
-            });
-
-            myData = JSON.parse('["Date(09/09/2001)"]', function (key, value) {
-                var d;
-                if (typeof value === 'string' &&
-                        value.slice(0, 5) === 'Date(' &&
-                        value.slice(-1) === ')') {
-                    d = new Date(value.slice(5, -1));
-                    if (d) {
-                        return d;
-                    }
-                }
-                return value;
-            });
-
-
-    This is a reference implementation. You are free to copy, modify, or
-    redistribute.
-*/
-
-/*jslint evil: true, strict: false */
-
-/*members "", "\b", "\t", "\n", "\f", "\r", "\"", JSON, "\\", apply,
-    call, charCodeAt, getUTCDate, getUTCFullYear, getUTCHours,
-    getUTCMinutes, getUTCMonth, getUTCSeconds, hasOwnProperty, join,
-    lastIndex, length, parse, prototype, push, replace, slice, stringify,
-    test, toJSON, toString, valueOf
-*/
-
-
-
-if (!this.JSON) {
-    this.JSON = {};
-}
-
-(function () {
-
-    function f(n) {
-        return n < 10 ? '0' + n : n;
-    }
-
-    if (typeof Date.prototype.toJSON !== 'function') {
-
-        Date.prototype.toJSON = function (key) {
-
-            return isFinite(this.valueOf()) ?
-                   this.getUTCFullYear()   + '-' +
-                 f(this.getUTCMonth() + 1) + '-' +
-                 f(this.getUTCDate())      + 'T' +
-                 f(this.getUTCHours())     + ':' +
-                 f(this.getUTCMinutes())   + ':' +
-                 f(this.getUTCSeconds())   + 'Z' : null;
-        };
-
-        String.prototype.toJSON =
-        Number.prototype.toJSON =
-        Boolean.prototype.toJSON = function (key) {
-            return this.valueOf();
-        };
-    }
-
-    var cx = /[\u0000\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g,
-        escapable = /[\\\"\x00-\x1f\x7f-\x9f\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g,
-        gap,
-        indent,
-        meta = {    // table of character substitutions
-            '\b': '\\b',
-            '\t': '\\t',
-            '\n': '\\n',
-            '\f': '\\f',
-            '\r': '\\r',
-            '"' : '\\"',
-            '\\': '\\\\'
-        },
-        rep;
-
-
-    function quote(string) {
-
-
-        escapable.lastIndex = 0;
-        return escapable.test(string) ?
-            '"' + string.replace(escapable, function (a) {
-                var c = meta[a];
-                return typeof c === 'string' ? c :
-                    '\\u' + ('0000' + a.charCodeAt(0).toString(16)).slice(-4);
-            }) + '"' :
-            '"' + string + '"';
-    }
-
-
-    function str(key, holder) {
-
-
-        var i,          // The loop counter.
-            k,          // The member key.
-            v,          // The member value.
-            length,
-            mind = gap,
-            partial,
-            value = holder[key];
-
-
-        if (value && typeof value === 'object' &&
-                typeof value.toJSON === 'function') {
-            value = value.toJSON(key);
-        }
-
-
-        if (typeof rep === 'function') {
-            value = rep.call(holder, key, value);
-        }
-
-
-        switch (typeof value) {
-        case 'string':
-            return quote(value);
-
-        case 'number':
-
-
-            return isFinite(value) ? String(value) : 'null';
-
-        case 'boolean':
-        case 'null':
-
-
-            return String(value);
-
-
-        case 'object':
-
-
-            if (!value) {
-                return 'null';
-            }
-
-
-            gap += indent;
-            partial = [];
-
-
-            if (Object.prototype.toString.apply(value) === '[object Array]') {
-
-
-                length = value.length;
-                for (i = 0; i < length; i += 1) {
-                    partial[i] = str(i, value) || 'null';
-                }
-
-
-                v = partial.length === 0 ? '[]' :
-                    gap ? '[\n' + gap +
-                            partial.join(',\n' + gap) + '\n' +
-                                mind + ']' :
-                          '[' + partial.join(',') + ']';
-                gap = mind;
-                return v;
-            }
-
-
-            if (rep && typeof rep === 'object') {
-                length = rep.length;
-                for (i = 0; i < length; i += 1) {
-                    k = rep[i];
-                    if (typeof k === 'string') {
-                        v = str(k, value);
-                        if (v) {
-                            partial.push(quote(k) + (gap ? ': ' : ':') + v);
-                        }
-                    }
-                }
-            } else {
-
-
-                for (k in value) {
-                    if (Object.hasOwnProperty.call(value, k)) {
-                        v = str(k, value);
-                        if (v) {
-                            partial.push(quote(k) + (gap ? ': ' : ':') + v);
-                        }
-                    }
-                }
-            }
-
-
-            v = partial.length === 0 ? '{}' :
-                gap ? '{\n' + gap + partial.join(',\n' + gap) + '\n' +
-                        mind + '}' : '{' + partial.join(',') + '}';
-            gap = mind;
-            return v;
-        }
-    }
-
-
-    if (typeof JSON.stringify !== 'function') {
-        JSON.stringify = function (value, replacer, space) {
-
-
-            var i;
-            gap = '';
-            indent = '';
-
-
-            if (typeof space === 'number') {
-                for (i = 0; i < space; i += 1) {
-                    indent += ' ';
-                }
-
-
-            } else if (typeof space === 'string') {
-                indent = space;
-            }
-
-
-            rep = replacer;
-            if (replacer && typeof replacer !== 'function' &&
-                    (typeof replacer !== 'object' ||
-                     typeof replacer.length !== 'number')) {
-                throw new Error('JSON.stringify');
-            }
-
-
-            return str('', {'': value});
-        };
-    }
-
-
-
-    if (typeof JSON.parse !== 'function') {
-        JSON.parse = function (text, reviver) {
-
-
-            var j;
-
-            function walk(holder, key) {
-
-
-                var k, v, value = holder[key];
-                if (value && typeof value === 'object') {
-                    for (k in value) {
-                        if (Object.hasOwnProperty.call(value, k)) {
-                            v = walk(value, k);
-                            if (v !== undefined) {
-                                value[k] = v;
-                            } else {
-                                delete value[k];
-                            }
-                        }
-                    }
-                }
-                return reviver.call(holder, key, value);
-            }
-
-
-
-            text = String(text);
-            cx.lastIndex = 0;
-            if (cx.test(text)) {
-                text = text.replace(cx, function (a) {
-                    return '\\u' +
-                        ('0000' + a.charCodeAt(0).toString(16)).slice(-4);
-                });
-            }
-
-
-
-            if (/^[\],:{}\s]*$/.
-test(text.replace(/\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4})/g, '@').
-replace(/"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g, ']').
-replace(/(?:^|:|,)(?:\s*\[)+/g, ''))) {
-
-
-                j = eval('(' + text + ')');
-
-
-                return typeof reviver === 'function' ?
-                    walk({'': j}, '') : j;
-            }
-
-
-            throw new SyntaxError('JSON.parse');
-        };
-    }
-}());
-
-
 /**
 # COG
 
@@ -431,9 +22,12 @@ COG = (function() {
         };
 
 var Log = exports.Log = (function() {
-    var listeners = [];
     var jsonAvailable = (typeof JSON !== 'undefined'),
-        traceAvailable = window.console && window.console.markTimeline;
+        traceAvailable = window.console && window.console.markTimeline,
+        logError = writer('error'),
+        logInfo = writer('info');
+
+    /* internal functions */
 
     function writeEntry(level, entryDetails) {
         var ii;
@@ -443,76 +37,53 @@ var Log = exports.Log = (function() {
             message += " " + (jsonAvailable && isPlainObject(entryDetails[ii]) ? JSON.stringify(entryDetails[ii]) : entryDetails[ii]);
         } // for
 
-        if (typeof console !== 'undefined') {
-            console[level](message);
-        } // if
-
-        for (ii = 0; ii < listeners.length; ii++) {
-            listeners[ii].call(module, message, level);
-        } // for
+        console[level](message);
     } // writeEntry
 
-    var module = {
-        /* logging functions */
+    function writer(level) {
+        if (typeof console !== 'undefined') {
+            return function() {
+                writeEntry(level, arguments);
+                return true;
+            };
+        }
+        else {
+            return function() {
+                return false;
+            };
+        } // if..else
+    } // writer
 
-        getTraceTicks: function() {
-            return traceAvailable ? new Date().getTime() : null;
-        },
+    /* exports */
 
-        trace: function(message, startTicks) {
-            if (traceAvailable) {
-                console.markTimeline(message + (startTicks ? ": " + (module.getTraceTicks() - startTicks) + "ms" : ""));
-            } // if
-        },
+    var trace = (function() {
+        if (traceAvailable) {
+            return function(message, startTicks) {
+                console.markTimeline(message + (startTicks ? ": " +
+                    (new Date().getTime() - startTicks) + "ms" : ""));
+            };
+        }
+        else {
+            return function() {};
+        } // if..else
+    })();
 
-        debug: function(message) {
-            writeEntry("debug", arguments);
-        },
-
-        info: function(message) {
-            writeEntry("info", arguments);
-        },
-
-        warn: function(message) {
-            writeEntry("warn", arguments);
-        },
-
-        error: function(message) {
-            writeEntry("error", arguments);
-        },
+    return {
+        trace: trace,
+        debug: writer('debug'),
+        info: logInfo,
+        warn: writer('warn'),
+        error: logError,
 
         exception: function(error) {
-            module.error(arguments);
-
-            for (var keyname in error) {
-                module.info("ERROR DETAIL: " + keyname + ": " + error[keyname]);
-            } // for
-        },
-
-        /* error monitoring, exception raising functions */
-
-        watch: function(sectionDesc, callback) {
-            try {
-                callback();
+            if (logError) {
+                for (var keyname in error) {
+                    logInfo("ERROR DETAIL: " + keyname + ": " + error[keyname]);
+                } // for
             }
-            catch (e) {
-                module.exception(e, sectionDesc);
-            } // try..catch
-        },
-
-        throwError: function(errorMsg) {
-            module.error(errorMsg);
-            throw new Error(errorMsg);
-        },
-
-        /* event handler functions */
-
-        requestUpdates: function(callback) {
-            listeners.push(callback);
         }
-    };
 
-    return module;
+    };
 })();
 
 
@@ -761,12 +332,10 @@ var Loopage = exports.Loopage = (function() {
         loopTimeout = workerCount ? setTimeout(runLoop, sleepFrequency) : 0;
     } // runLoop
 
-    var module = {
+    return {
         join: joinLoop,
         leave: leaveLoop
     };
-
-    return module;
 })();
 function getHandlers(target) {
     return target.gtObsHandlers;
@@ -995,6 +564,57 @@ http://www.nonobtrusive.com/2010/05/20/lightweight-jsonp-without-any-3rd-party-l
 INTERACT = (function() {
     var interactorRegistry = {};
 
+var EventMonitor = function(target, handlers, params) {
+    params = COG.extend({
+        binder: null,
+        unbinder: null,
+        observable: null
+    }, params);
+
+    var observable = params.observable;
+
+
+    /* internals */
+
+    function handlePanMove(evt, absXY, relXY, deltaXY) {
+        observable.trigger('pan', deltaXY.x, deltaXY.y);
+    } // handlePanMove
+
+    /* exports */
+
+    function bind() {
+        observable.bind.apply(null, arguments);
+    } // bind
+
+    function pannable() {
+        observable.bind('pointerMove', handlePanMove);
+
+        return self;
+    } // pannable
+
+    function unbind() {
+        for (var ii = 0; ii < handlers.length; ii++) {
+            handlers[ii].unbind();
+        } // for
+
+        return self;
+    } // unbind
+
+    /* define the object */
+
+    var self = {
+        bind: bind,
+        pannable: pannable,
+        unbind: unbind
+    };
+
+    for (var ii = 0; ii < handlers.length; ii++) {
+        handlers[ii](target, observable, params);
+    } // for
+
+    return self;
+};
+
     /* internal functions */
 
     function genBinder(useBody) {
@@ -1013,6 +633,22 @@ INTERACT = (function() {
         };
     } // unbindDoc
 
+    function getHandlers(types, capabilities) {
+        var handlers = [];
+
+        for (var key in interactorRegistry) {
+            var interactor = interactorRegistry[key],
+                selected = (! types) || (types.indexOf(key) >= 0);
+
+
+            if (selected) {
+                handlers[handlers.length] = interactor.handler;
+            } // if
+        } // for
+
+        return handlers;
+    } // getHandlers
+
     function ieBind(evtName, callback, customTarget) {
         (customTarget ? customTarget : document).attachEvent('on' + evtName, callback);
     } // ieBind
@@ -1021,15 +657,20 @@ INTERACT = (function() {
         (customTarget ? customTarget : document).detachEvent('on' + evtName, callback);
     } // ieUnbind
 
+    function point(x, y) {
+        return {
+            x: x ? x : 0,
+            y: y ? y : 0
+        };
+    } // point
 
     /* exports */
 
     function register(typeName, opts) {
-        interactorRegistry[typename] = COG.extend({
-            attach: null,
-            detach: null,
+        interactorRegistry[typeName] = COG.extend({
+            handler: null,
             checks: {}
-        });
+        }, opts);
     } // register
 
     /**
@@ -1038,6 +679,7 @@ INTERACT = (function() {
     function watch(target, opts, caps) {
         opts = COG.extend({
             bindToBody: false,
+            observable: null,
             isIE: false,
             types: null
         }, opts);
@@ -1046,23 +688,134 @@ INTERACT = (function() {
             touch: 'ontouchstart' in window
         }, caps);
 
-        var binder = opts.isIE ? ieBind : genBinder(opts.bindToBody),
-            unbinder = opts.isIE ? ieUnbind : genUnbinder(opts.bindToBody),
-            interactors = getInteractors(opts.types, capabilities);
+        if (! opts.observable) {
+            opts.observable = {};
+            COG.observable(opts.observable);
+        } // if
+
+        opts.binder = opts.isIE ? ieBind : genBinder(opts.bindToBody);
+        opts.unbinder = opts.isIE ? ieUnbind : genUnbinder(opts.bindToBody);
+
+        return new EventMonitor(target, getHandlers(opts.types, capabilities), opts);
     } // watch
 
-function attachMouse(target, opts, binder) {
-    binder('mousedown', touchStart, false);
-    binder('mousemove', touchMove, false);
-    binder('mouseup', touchEnd, false);
+/* common pointer (mouse, touch, etc) functions */
 
-    binder("mousewheel", wheelie, window);
-    binder("DOMMouseScroll", wheelie, window);
-} // attachMouse
+function getOffset(obj) {
+    var calcLeft = 0,
+        calcTop = 0;
+
+    if (obj.offsetParent) {
+        do {
+            calcLeft += obj.offsetLeft;
+            calcTop += obj.offsetTop;
+
+            obj = obj.offsetParent;
+        } while (obj);
+    } // if
+
+    return {
+        x: calcLeft,
+        y: calcTop
+    };
+} // getOffset
+
+function pointerOffset(absPoint, offset) {
+    return {
+        x: absPoint.x - (offset ? offset.x : 0),
+        y: absPoint.y - (offset ? offset.y : 0)
+    };
+} // triggerPositionEvent
+var MouseHandler = function(targetElement, observable, opts) {
+    var aggressiveCapture = false,
+        buttonDown = false,
+        start,
+        offset,
+        currentX,
+        currentY,
+        lastX,
+        lastY;
+
+    /* internal functions */
+
+    function handleMouseDown(evt) {
+        var targ = evt.target ? evt.target : evt.srcElement;
+
+        if (aggressiveCapture || targ && (targ === targetElement)) {
+            buttonDown = (evt.button === 0);
+            if (buttonDown) {
+                lastX = evt.pageX ? evt.pageX : evt.screenX;
+                lastY = evt.pageY ? evt.pageY : evt.screenY;
+                start = point(lastX, lastY);
+                offset = getOffset(targetElement);
+
+                observable.trigger(
+                    'pointerDown',
+                    start,
+                    pointerOffset(start, offset)
+                );
+            } // if
+        } // if
+    } // mouseDown
+
+    function handleMouseMove(evt) {
+        var targ = evt.target ? evt.target : evt.srcElement,
+            zoomDistance = 0;
+
+        currentX = evt.pageX ? evt.pageX : evt.screenX;
+        currentY = evt.pageY ? evt.pageY : evt.screenY;
+
+        if (buttonDown && (aggressiveCapture || targ && (targ === targetElement))) {
+            triggerCurrent('pointerMove');
+        } // if
+    } // mouseMove
+
+    function handleMouseUp(evt) {
+        var targ = evt.target ? evt.target : evt.srcElement,
+            zoomDistance = 0;
+
+        if (buttonDown && (evt.button === 0)) {
+            buttonDown = false;
+
+            if (aggressiveCapture || targ && (targ === targetElement)) {
+                triggerCurrent('pointerUp');
+            } // if
+        } // if
+    } // mouseUp
+
+    function triggerCurrent(eventName, includeTotal) {
+        var current = point(currentX, currentY);
+
+        observable.trigger(
+            eventName,
+            current,
+            pointerOffset(current, offset),
+            point(currentX - lastX, currentY - lastY)
+        );
+
+        lastX = currentX;
+        lastY = currentY;
+    } // triggerCurrent
+
+    /* exports */
+
+    function unbind() {
+        opts.unbinder('mousedown', handleMouseDown, false);
+        opts.unbinder('mousemove', handleMouseMove, false);
+        opts.unbinder('mouseup', handleMouseUp, false);
+    } // unbind
+
+    opts.binder('mousedown', handleMouseDown, false);
+    opts.binder('mousemove', handleMouseMove, false);
+    opts.binder('mouseup', handleMouseUp, false);
+
+    return {
+        unbind: unbind
+    };
+}; // MouseHandler
 
 register('pointer', {
-    attach: attachMouse,
-    detach: detachMouse,
+    handler: MouseHandler,
     checks: {
         touch: false
     }
