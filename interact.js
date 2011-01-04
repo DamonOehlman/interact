@@ -562,7 +562,7 @@ http://www.nonobtrusive.com/2010/05/20/lightweight-jsonp-without-any-3rd-party-l
 # INTERACT
 */
 INTERACT = (function() {
-    var interactorRegistry = {};
+    var interactors = [];
 
 var EventMonitor = function(target, handlers, params) {
     params = COG.extend({
@@ -571,7 +571,8 @@ var EventMonitor = function(target, handlers, params) {
         observable: null
     }, params);
 
-    var observable = params.observable;
+    var observable = params.observable,
+        handlerInstances = [];
 
 
     /* internals */
@@ -586,15 +587,19 @@ var EventMonitor = function(target, handlers, params) {
         observable.bind.apply(null, arguments);
     } // bind
 
-    function pannable() {
+    function pannable(opts) {
+        opts = COG.extend({
+            inertia: true
+        }, opts);
+
         observable.bind('pointerMove', handlePanMove);
 
         return self;
     } // pannable
 
     function unbind() {
-        for (var ii = 0; ii < handlers.length; ii++) {
-            handlers[ii].unbind();
+        for (var ii = 0; ii < handlerInstances.length; ii++) {
+            handlerInstances[ii].unbind();
         } // for
 
         return self;
@@ -609,7 +614,7 @@ var EventMonitor = function(target, handlers, params) {
     };
 
     for (var ii = 0; ii < handlers.length; ii++) {
-        handlers[ii](target, observable, params);
+        handlerInstances.push(handlers[ii](target, observable, params));
     } // for
 
     return self;
@@ -636,12 +641,19 @@ var EventMonitor = function(target, handlers, params) {
     function getHandlers(types, capabilities) {
         var handlers = [];
 
-        for (var key in interactorRegistry) {
-            var interactor = interactorRegistry[key],
-                selected = (! types) || (types.indexOf(key) >= 0);
+        for (var ii = interactors.length; ii--; ) {
+            var interactor = interactors[ii],
+                selected = (! types) || (types.indexOf(interactor.type) >= 0),
+                checksPass = true;
 
+            for (var checkKey in interactor.checks) {
+                var check = interactor.checks[checkKey];
+                COG.Log.info('checking ' + checkKey + ' capability. require: ' + check + ', capability = ' + capabilities[checkKey]);
 
-            if (selected) {
+                checksPass = checksPass && (check === capabilities[checkKey]);
+            } // for
+
+            if (selected && checksPass) {
                 handlers[handlers.length] = interactor.handler;
             } // if
         } // for
@@ -667,10 +679,11 @@ var EventMonitor = function(target, handlers, params) {
     /* exports */
 
     function register(typeName, opts) {
-        interactorRegistry[typeName] = COG.extend({
+        interactors.push(COG.extend({
             handler: null,
-            checks: {}
-        }, opts);
+            checks: {},
+            type: typeName
+        }, opts));
     } // register
 
     /**
@@ -726,7 +739,20 @@ function pointerOffset(absPoint, offset) {
         y: absPoint.y - (offset ? offset.y : 0)
     };
 } // triggerPositionEvent
+
+function preventDefault(evt) {
+    if (evt.preventDefault) {
+        evt.preventDefault();
+        evt.stopPropagation();
+    }
+    else if (evt.cancelBubble) {
+        evt.cancelBubble();
+    } // if..else
+} // preventDefault
 var MouseHandler = function(targetElement, observable, opts) {
+    var WHEEL_DELTA_STEP = 120,
+        WHEEL_DELTA_LEVEL = WHEEL_DELTA_STEP * 8;
+
     var aggressiveCapture = false,
         buttonDown = false,
         start,
@@ -759,8 +785,7 @@ var MouseHandler = function(targetElement, observable, opts) {
     } // mouseDown
 
     function handleMouseMove(evt) {
-        var targ = evt.target ? evt.target : evt.srcElement,
-            zoomDistance = 0;
+        var targ = evt.target ? evt.target : evt.srcElement;
 
         currentX = evt.pageX ? evt.pageX : evt.screenX;
         currentY = evt.pageY ? evt.pageY : evt.screenY;
@@ -771,8 +796,7 @@ var MouseHandler = function(targetElement, observable, opts) {
     } // mouseMove
 
     function handleMouseUp(evt) {
-        var targ = evt.target ? evt.target : evt.srcElement,
-            zoomDistance = 0;
+        var targ = evt.target ? evt.target : evt.srcElement;
 
         if (buttonDown && (evt.button === 0)) {
             buttonDown = false;
@@ -780,8 +804,37 @@ var MouseHandler = function(targetElement, observable, opts) {
             if (aggressiveCapture || targ && (targ === targetElement)) {
                 triggerCurrent('pointerUp');
             } // if
+
         } // if
     } // mouseUp
+
+    function handleWheel(evt) {
+        var targ = evt.target ? evt.target : evt.srcElement;
+
+        if (aggressiveCapture || targ && (targ === targetElement)) {
+            var deltaY;
+
+            if (evt.detail) {
+                deltaY = evt.axis === 2 ? -evt.detail * WHEEL_DELTA_STEP : 0;
+            }
+            else {
+                deltaY = evt.wheelDeltaY;
+            } // if..else
+
+            if (deltaY !== 0) {
+                var current = point(currentX, currentY);
+
+                observable.trigger(
+                    'zoom',
+                    current,
+                    pointerOffset(current, offset),
+                    deltaY / WHEEL_DELTA_LEVEL
+                );
+
+                preventDefault(evt);
+            } // if
+        } // if
+    } // handleWheel
 
     function triggerCurrent(eventName, includeTotal) {
         var current = point(currentX, currentY);
@@ -790,7 +843,7 @@ var MouseHandler = function(targetElement, observable, opts) {
             eventName,
             current,
             pointerOffset(current, offset),
-            point(currentX - lastX, currentY - lastY)
+            point(lastX - currentX, lastY - currentY)
         );
 
         lastX = currentX;
@@ -803,11 +856,17 @@ var MouseHandler = function(targetElement, observable, opts) {
         opts.unbinder('mousedown', handleMouseDown, false);
         opts.unbinder('mousemove', handleMouseMove, false);
         opts.unbinder('mouseup', handleMouseUp, false);
+
+        opts.unbinder("mousewheel", handleWheel, window);
+        opts.unbinder("DOMMouseScroll", handleWheel, window);
     } // unbind
 
     opts.binder('mousedown', handleMouseDown, false);
     opts.binder('mousemove', handleMouseMove, false);
     opts.binder('mouseup', handleMouseUp, false);
+
+    opts.binder("mousewheel", handleWheel, window);
+    opts.binder("DOMMouseScroll", handleWheel, window);
 
     return {
         unbind: unbind
@@ -818,6 +877,113 @@ register('pointer', {
     handler: MouseHandler,
     checks: {
         touch: false
+    }
+});
+var TouchHandler = function(targetElement, observable, opts) {
+    var DEFAULT_INERTIA_MAX = 500,
+        INERTIA_TIMEOUT_MOUSE = 100,
+        INERTIA_TIMEOUT_TOUCH = 250,
+        THRESHOLD_DOUBLETAP = 300,
+        THRESHOLD_PINCHZOOM = 5,
+        EMPTY_TOUCH_DATA = {
+            x: 0,
+            y: 0
+        };
+
+    var TOUCH_MODE_TAP = 0,
+        TOUCH_MODE_MOVE = 1,
+        TOUCH_MODE_PINCH = 2;
+
+    var touchMode,
+        touchDown = false,
+        touchesStart = COG.extend({}, EMPTY_TOUCH_DATA);
+
+    /* internal functions */
+
+    function calcChange(first, second) {
+        var srcVector = (first && (first.count > 0)) ? first.touches[0] : null;
+        if (srcVector && second && (second.count > 0)) {
+            return calcDiff(srcVector, second.touches[0]);
+        } // if
+
+        return null;
+    } // calcChange
+
+    function fillTouchData(touchData, evt, evtProp) {
+        var touches = evt[evtProp ? evtProp : 'touches'],
+            touchCount = touches.length,
+            ii = 0;
+
+        do {
+            touchData.x = touches[ii].pageX;
+            touchData.y = touches[ii].pageY;
+
+            ii += 1;
+            if (ii >= touchCount) {
+                touchData.next = null;
+                break;
+            } // if
+
+            touchData = touchData.next = {
+                x: 0,
+                y: 0
+            };
+        } while (true);
+    } // fillTouchData
+
+    function handleTouchStart(evt) {
+        var targ = evt.target ? evt.target : evt.srcElement;
+
+        COG.Log.info('captured touch start, target same = ' + targ && (targ === targetElement));
+
+        if (targ && (targ === targetElement)) {
+            fillTouchData(touchesStart, evt);
+            globalTouchesStart = touchesStart;
+
+            touchMode = TOUCH_MODE_TAP;
+
+        } // if
+    } // handleTouchStart
+
+    function handleTouchMove(evt) {
+
+    } // handleTouchMove
+
+    function handleTouchEnd(evt) {
+
+    } // handleTouchEnd
+
+    function initTouchData() {
+        return {
+            x: 0,
+            y: 0,
+            next: null
+        };
+    } // initTouchData
+
+    /* exports */
+
+    function unbind() {
+        opts.unbinder('touchstart', handleTouchStart, false);
+        opts.unbinder('touchmove', handleTouchMove, false);
+        opts.unbinder('touchend', handleTouchEnd, false);
+    } // unbind
+
+    opts.binder('touchstart', handleTouchStart, false);
+    opts.binder('touchmove', handleTouchMove, false);
+    opts.binder('touchend', handleTouchEnd, false);
+
+    COG.Log.info('initialized touch handler');
+
+    return {
+        unbind: unbind
+    };
+}; // TouchHandler
+
+register('pointer', {
+    handler: TouchHandler,
+    checks: {
+        touch: true
     }
 });
 

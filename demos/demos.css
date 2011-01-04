@@ -1,0 +1,68 @@
+body {
+    max-width: 950px;
+    margin: 20px auto;
+}
+
+a {
+    color: navy;
+}
+
+#sidebar {
+ float: left;
+ margin: 0 10px 0 0;
+}
+
+#sidebar h1 {
+    font: 1.2em Arial;
+    margin: 0;
+}
+
+#sidebar ul {
+ list-style-type: none;
+ margin: 0;
+ padding: 0;
+}
+
+#sidebar ul li {
+    float: left;
+    margin: 0 5px 0 0;
+}
+
+#sidebar ul li a {
+ background: rgba(30, 30, 30, 0.1);
+ margin: 5px auto;
+ padding: 4px 8px;
+ display: block;
+ -webkit-border-radius: 4px;
+}
+
+#sidebar ul li a:hover {
+ background: rgba(30, 30, 30, 0.2);
+}
+
+#sidebar ul li a.active {
+    background: #447821;
+    text-decoration: none;
+    color: white;
+}
+
+canvas {
+    background: url(http://sidelab.github.com/interact/img/interact-watermark.png) 50% 50% no-repeat;
+    border: 1px solid black;
+    float: right;
+}
+
+h2 {
+    clear: both;
+    font: 1.2em Arial;
+    margin: 20px 0 0 0;
+    padding: 0 0 10px 20px;
+}
+
+#demoCode {
+    background: rgba(30, 30, 30, 0.1);
+    border: 0px;
+    padding: 20px;
+    margin: 0;
+    -webkit-border-radius: 0 8px 0 0;
+}

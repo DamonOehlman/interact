@@ -6,7 +6,8 @@ var EventMonitor = function(target, handlers, params) {
     }, params);
     
     // initialise variables
-    var observable = params.observable;
+    var observable = params.observable,
+        handlerInstances = [];
     
     // TODO: check that the binder, unbinder and observable have been supplied
     
@@ -34,8 +35,8 @@ var EventMonitor = function(target, handlers, params) {
     } // pannable
     
     function unbind() {
-        for (var ii = 0; ii < handlers.length; ii++) {
-            handlers[ii].unbind();
+        for (var ii = 0; ii < handlerInstances.length; ii++) {
+            handlerInstances[ii].unbind();
         } // for
         
         return self;
@@ -51,7 +52,7 @@ var EventMonitor = function(target, handlers, params) {
     
     // iterate through the handlers and attach
     for (var ii = 0; ii < handlers.length; ii++) {
-        handlers[ii](target, observable, params);
+        handlerInstances.push(handlers[ii](target, observable, params));
     } // for
     
     return self;

@@ -5,7 +5,7 @@
 */
 INTERACT = (function() {
     // initialise variables
-    var interactorRegistry = {};
+    var interactors = [];
     
     //= require "eventmonitor"
     
@@ -31,13 +31,20 @@ INTERACT = (function() {
         var handlers = [];
         
         // iterate through the interactors in the registry
-        for (var key in interactorRegistry) {
-            var interactor = interactorRegistry[key],
-                selected = (! types) || (types.indexOf(key) >= 0);
+        for (var ii = interactors.length; ii--; ) {
+            var interactor = interactors[ii],
+                selected = (! types) || (types.indexOf(interactor.type) >= 0),
+                checksPass = true;
                 
             // TODO: perform capabilities check
+            for (var checkKey in interactor.checks) {
+                var check = interactor.checks[checkKey];
+                COG.Log.info('checking ' + checkKey + ' capability. require: ' + check + ', capability = ' + capabilities[checkKey]);
+                
+                checksPass = checksPass && (check === capabilities[checkKey]);
+            } // for
             
-            if (selected) {
+            if (selected && checksPass) {
                 handlers[handlers.length] = interactor.handler;
             } // if
         } // for
@@ -63,10 +70,11 @@ INTERACT = (function() {
     /* exports */
     
     function register(typeName, opts) {
-        interactorRegistry[typeName] = COG.extend({
+        interactors.push(COG.extend({
             handler: null,
-            checks: {}
-        }, opts);
+            checks: {},
+            type: typeName
+        }, opts));
     } // register
     
     /**
@@ -102,7 +110,7 @@ INTERACT = (function() {
     
     //= require "interactors/pointer"
     //= require "interactors/mouse"
-    // TODO: require "touch"
+    //= require "interactors/touch"
     
     return {
         register: register,

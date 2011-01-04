@@ -36,8 +36,7 @@ var MouseHandler = function(targetElement, observable, opts) {
     } // mouseDown
 
     function handleMouseMove(evt) {
-        var targ = evt.target ? evt.target : evt.srcElement,
-            zoomDistance = 0;
+        var targ = evt.target ? evt.target : evt.srcElement;
             
         // capture the current x and current y
         currentX = evt.pageX ? evt.pageX : evt.screenX;
@@ -49,8 +48,7 @@ var MouseHandler = function(targetElement, observable, opts) {
     } // mouseMove
 
     function handleMouseUp(evt) {
-        var targ = evt.target ? evt.target : evt.srcElement,
-            zoomDistance = 0;
+        var targ = evt.target ? evt.target : evt.srcElement;
         
         if (buttonDown && (evt.button === 0)) {
             buttonDown = false;
