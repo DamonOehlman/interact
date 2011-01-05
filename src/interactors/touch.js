@@ -1,4 +1,8 @@
 var TouchHandler = function(targetElement, observable, opts) {
+    opts = COG.extend({
+        detailedEvents: false
+    }, opts);
+    
     // initialise constants
     var DEFAULT_INERTIA_MAX = 500,
         INERTIA_TIMEOUT_MOUSE = 100,
@@ -25,6 +29,7 @@ var TouchHandler = function(targetElement, observable, opts) {
         touchesCurrent,
         startDistance,
         touchesLast,
+        detailedEvents = opts.detailedEvents,
         scaling = 1;
 
     /* internal functions */
@@ -174,6 +179,11 @@ var TouchHandler = function(targetElement, observable, opts) {
                         // calculate the current distance
                         var touchDistance = calcTouchDistance(touchesCurrent),
                             distanceDelta = Math.abs(startDistance - touchDistance);
+                            
+                        // fire a touch multi event for custom event handling
+                        if (detailedEvents) {
+                            observable.trigger('pointerMulti', touchesCurrent, offset);
+                        } // if
                         
                         // if the distance is not great enough then switch back to move 
                         if (distanceDelta < THRESHOLD_PINCHZOOM) {
