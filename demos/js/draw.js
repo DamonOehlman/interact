@@ -5,6 +5,8 @@ demos.draw = function() {
     
     // handle pointer down events
     eventMonitor.bind('pointerDown', function(evt, absXY, relXY) {
+        demos.status('pointer down', 300);
+        
         context.beginPath();
         context.moveTo(relXY.x, relXY.y);
     });

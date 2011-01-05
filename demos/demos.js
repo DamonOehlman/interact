@@ -54,7 +54,7 @@ var demos = (function() {
             } // if
         }
         else {
-            loadScript('js/' + demo + '.js', function() {
+            loadScript('js/' + demo + '.js?v=' + new Date().getTime(), function() {
                 loadedDemos[demo] = true;
                 if (callback) {
                     callback(demo);
