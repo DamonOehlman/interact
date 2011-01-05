@@ -1,10 +1,7 @@
-function status(msg) {
-    $('#status').html(msg);
-} // status
-
 var demos = (function() {
     var loadedDemos = {},
-        canvas = null;
+        canvas = null,
+        statusTimeout = 0;
     
     function loadScript(url, callback) {
         var script = document.createElement('script'),
@@ -38,6 +35,7 @@ var demos = (function() {
         if (demoHandler) {
             $('a[href="#' + demo + '"]').addClass('active');
             demoHandler();
+            self.current = demo;
             
             $('#demoCode')[0].innerText = demoHandler.toString();
             prettyPrint();
@@ -65,6 +63,17 @@ var demos = (function() {
         } // if..else
     } // runDemo
     
+    function status(msg, fadeAfter) {
+        clearTimeout(statusTimeout);
+        $('#status').html(msg).show();
+
+        if (typeof fadeAfter !== 'undefined') {
+            statusTimeout = setTimeout(function() {
+                $('#status').fadeOut('fast');
+            }, fadeAfter);
+        } // if
+    } // status
+    
     function runDemo() {
         loadDemo(this.href.replace(/^.*#(.*)$/, '$1'), function(demo) {
             showDemo(demo);
@@ -81,9 +90,11 @@ var demos = (function() {
     });
     
     var self = {
+        current: null,
         eventMonitor: null,
         
-        load: loadDemo
+        load: loadDemo,
+        status: status
     };
     
     return self;

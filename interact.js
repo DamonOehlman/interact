@@ -663,9 +663,11 @@ var TouchHandler = function(targetElement, observable, opts) {
                                 currentScaling = touchDistance / startDistance,
                                 scaleChange = currentScaling - scaling;
 
+                            /*
                             COG.info('zooming, center x = ' + current.x,
                                 'y = ' + current.y,
                                 'scaleChange = ' + scaleChange);
+                            */
 
                             observable.trigger(
                                 'zoom',

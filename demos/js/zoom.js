@@ -8,6 +8,10 @@ demos.zoom = function() {
         imageY = 0;
         
     function initImage() {
+        if (demos.current !== 'zoom') {
+            return;
+        } // if
+
         // handle pointer down events
         eventMonitor.bind('pan', function(evt, panX, panY) {
             imageX -= panX;
@@ -22,6 +26,7 @@ demos.zoom = function() {
             drawImage();
         });
         
+        demos.status('', 0);
         drawImage();
     } // initImage
     
@@ -49,4 +54,5 @@ demos.zoom = function() {
     // load the image
     blackHole.src = 'http://estock.s3.amazonaws.com/wwtfc1/24/88/31/estock_commonswiki_248831_o.jpg';
     blackHole.onload = initImage;
+    demos.status('loading image');
 };

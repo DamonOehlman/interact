@@ -14,11 +14,11 @@ demos.draw = function() {
         context.lineTo(relXY.x, relXY.y);
         context.stroke();
     
-        status('delta = x: ' + deltaXY.x + ', y: ' + deltaXY.y + '');
+        demos.status('delta = x: ' + deltaXY.x + ', y: ' + deltaXY.y + '');
     });
 
     // handle pointer up events
     eventMonitor.bind('pointerUp', function(evt, absXY, relXY, deltaXY) {
-        status('pointer up');
+        demos.status('pointer up', 300);
     });
 };

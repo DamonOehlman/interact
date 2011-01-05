@@ -49,14 +49,29 @@ a {
 canvas {
     background: url(http://sidelab.github.com/interact/img/interact-watermark.png) 50% 50% no-repeat;
     border: 1px solid black;
+    border-bottom: 0;
     float: right;
 }
 
 h2 {
-    clear: both;
     font: 1.2em Arial;
     margin: 20px 0 0 0;
     padding: 0 0 10px 20px;
+    clear: right;
+}
+
+#statusContainer {
+    font: 0.8em Arial;
+    float: right;
+    clear: both;
+    min-height: 24px;
+    text-align: center;
+    width: 500px;
+    padding: 8px 0 0 0;
+    background: #e8e8e8;
+    border: 1px solid black;
+    border-top: 0;
+    -webkit-border-radius: 0 0 5px 5px;
 }
 
 #demoCode {
