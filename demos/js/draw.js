@@ -1,7 +1,7 @@
 demos.draw = function() {
     var demoCanvas = $('#demoCanvas')[0],
-        eventMonitor = INTERACT.watch(demoCanvas),
-        context = demoCanvas.getContext('2d');
+        context = demoCanvas.getContext('2d'),
+        eventMonitor = demos.eventMonitor = INTERACT.watch(demoCanvas);
     
     // handle pointer down events
     eventMonitor.bind('pointerDown', function(evt, absXY, relXY) {
@@ -21,6 +21,4 @@ demos.draw = function() {
     eventMonitor.bind('pointerUp', function(evt, absXY, relXY, deltaXY) {
         status('pointer up');
     });
-    
-    return eventMonitor;
 };

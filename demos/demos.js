@@ -4,25 +4,7 @@ function status(msg) {
 
 var demos = (function() {
     var loadedDemos = {},
-        eventMonitor = null,
         canvas = null;
-    
-    function loadDemo() {
-        var demo = this.href.replace(/^.*#(.*)$/, '$1');
-        
-        $('ul#demos a').removeClass('active');
-
-        // if the demo is loaded, then run it
-        if (loadedDemos[demo]) {
-            showDemo(demo);
-        }
-        else {
-            loadScript('js/' + demo + '.js', function() {
-                loadedDemos[demo] = true;
-                showDemo(demo);
-            });
-        } // if..else
-    } // runDemo
     
     function loadScript(url, callback) {
         var script = document.createElement('script'),
@@ -42,8 +24,9 @@ var demos = (function() {
     } // loadScript
     
     function showDemo(demo) {
-        if (eventMonitor) {
-            eventMonitor.unbind();
+        if (self.eventMonitor) {
+            self.eventMonitor.unbind();
+            self.eventMonitor = null;
         } // if
         
         // if we have a canvas, then clear it
@@ -54,19 +37,54 @@ var demos = (function() {
         var demoHandler = demos[demo];
         if (demoHandler) {
             $('a[href="#' + demo + '"]').addClass('active');
-            eventMonitor = demoHandler();
+            demoHandler();
             
             $('#demoCode')[0].innerText = demoHandler.toString();
             prettyPrint();
         } // if
     } // showDemo
     
+    /* exports */
+    
+    function loadDemo(demo, callback) {
+        $('ul#demos a').removeClass('active');
+
+        // if the demo is loaded, then run it
+        if (loadedDemos[demo]) {
+            if (callback) {
+                callback(demo);
+            } // if
+        }
+        else {
+            loadScript('js/' + demo + '.js', function() {
+                loadedDemos[demo] = true;
+                if (callback) {
+                    callback(demo);
+                } // if
+            });
+        } // if..else
+    } // runDemo
+    
+    function runDemo() {
+        loadDemo(this.href.replace(/^.*#(.*)$/, '$1'), function(demo) {
+            showDemo(demo);
+        });
+    }
+    
+    /* initialization */    
+    
     $(document).ready(function() {
         canvas = $('#demoCanvas')[0];
         
-        $('ul#demos a').click(loadDemo);
+        $('ul#demos a').click(runDemo);
         loadDemo.apply($('ul#demos a')[0]);
     });
     
-    return {};
+    var self = {
+        eventMonitor: null,
+        
+        load: loadDemo
+    };
+    
+    return self;
 })();
