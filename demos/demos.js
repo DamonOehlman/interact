@@ -45,7 +45,7 @@ var demos = (function() {
     /* exports */
     
     function loadDemo(demo, callback) {
-        $('ul#demos a').removeClass('active');
+        $('.demos ul a').removeClass('active');
 
         // if the demo is loaded, then run it
         if (loadedDemos[demo]) {
@@ -85,8 +85,8 @@ var demos = (function() {
     $(document).ready(function() {
         canvas = $('#demoCanvas')[0];
         
-        $('ul#demos a').click(runDemo);
-        runDemo.apply($('ul#demos a')[0]);
+        $('.demos ul a').click(runDemo);
+        runDemo.apply($('.demos ul a')[0]);
     });
     
     var self = {
