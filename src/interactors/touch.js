@@ -57,10 +57,15 @@ var TouchHandler = function(targetElement, observable, opts) {
         return ~~Math.sqrt(xDist * xDist + yDist * yDist);
     } // touches
     
-    function copyTouches(src) {
+    function copyTouches(src, adjustX, adjustY) {
+        // set to 0 if not supplied
+        adjustX = adjustX ? adjustX : 0;
+        adjustY = adjustY ? adjustY : 0;
+        
         var firstTouch = {
-                x: src.x,
-                y: src.y,
+                x: src.x - adjustX,
+                y: src.y - adjustY,
+                id: src.id,
                 count: src.count
             },
             touchData = firstTouch;
@@ -69,8 +74,9 @@ var TouchHandler = function(targetElement, observable, opts) {
             src = src.next;
             
             touchData = touchData.next = {
-                x: src.x,
-                y: src.y
+                x: src.x - adjustX,
+                y: src.y - adjustY,
+                id: src.id
             };
         } // while
         
@@ -88,24 +94,32 @@ var TouchHandler = function(targetElement, observable, opts) {
             height = Math.abs(y1 - y2);
             
         return {
-            x: minX + ~~(width / 2),
-            y: minY + ~~(height / 2)
+            x: minX + (width >> 1),
+            y: minY + (height >> 1)
         };
     } // getTouchCenter
     
     function getTouchData(evt, evtProp) {
         var touches = evt[evtProp ? evtProp : 'touches'],
-            firstTouch = {
+            firstTouch, touchData;
+            
+        if (touches.length === 0) {
+            return null;
+        } // if
+            
+        // assign the first touch and touch data
+        touchData = firstTouch = {
                 x: touches[0].pageX,
                 y: touches[0].pageY,
+                id: touches[0].identifier,
                 count: touches.length
-            },
-            touchData = firstTouch;
+        };
             
         for (var ii = 1, touchCount = touches.length; ii < touchCount; ii++) {
             touchData = touchData.next = {
                 x: touches[ii].pageX,
-                y: touches[ii].pageY
+                y: touches[ii].pageY,
+                id: touches[ii].identifier
             };
         } // for
         
@@ -116,6 +130,8 @@ var TouchHandler = function(targetElement, observable, opts) {
         var targ = evt.target ? evt.target : evt.srcElement;
         
         if (targ && (targ === targetElement)) {
+            var changedTouches = getTouchData(evt, 'changedTouches');
+            
             touchesStart = getTouchData(evt);
             offset = getOffset(targetElement);
             
@@ -125,8 +141,8 @@ var TouchHandler = function(targetElement, observable, opts) {
             // trigger the pointer down event
             observable.trigger(
                 'pointerDown', 
-                touchesStart, 
-                pointerOffset(touchesStart, offset)
+                changedTouches, 
+                copyTouches(changedTouches, offset.x, offset.y)
             );
             
             // check the start distance
@@ -194,18 +210,12 @@ var TouchHandler = function(targetElement, observable, opts) {
                             var current = getTouchCenter(touchesCurrent),
                                 currentScaling = touchDistance / startDistance,
                                 scaleChange = currentScaling - scaling;
-
-                            /*
-                            COG.info('zooming, center x = ' + current.x, 
-                                'y = ' + current.y,
-                                'scaleChange = ' + scaleChange);
-                            */
                                 
                             // trigger the zoom event
                             observable.trigger(
                                 'zoom', 
                                 current, 
-                                pointerOffset(current, offset),
+                                copyTouches(current, offset.x, offset.y),
                                 scaleChange
                             );
                             
@@ -221,7 +231,7 @@ var TouchHandler = function(targetElement, observable, opts) {
                     observable.trigger(
                         'pointerMove',
                         touchesCurrent,
-                        pointerOffset(touchesCurrent, offset),
+                        copyTouches(touchesCurrent, offset.x, offset.y),
                         point(
                             touchesLast.x - touchesCurrent.x, 
                             touchesLast.y - touchesCurrent.y)
@@ -234,7 +244,31 @@ var TouchHandler = function(targetElement, observable, opts) {
     } // handleTouchMove
     
     function handleTouchEnd(evt) {
-        
+        var targ = evt.target ? evt.target : evt.srcElement;
+        if (targ && (targ === targetElement)) {
+            var changedTouches = getTouchData(evt, 'changedTouches'),
+                offsetTouches = copyTouches(changedTouches, offset.x, offset.y);
+            
+            // get the current touches
+            touchesCurrent = getTouchData(evt);
+            if ((! touchesCurrent) && touchMode === TOUCH_MODE_TAP) {
+                // trigger the pointer move event
+                observable.trigger(
+                    'pointerTap',
+                    changedTouches,
+                    offsetTouches
+                );
+                
+                COG.info('tapped');
+            } // if
+            
+            // trigger the pointer up
+            observable.trigger(
+                'pointerUp',
+                changedTouches,
+                offsetTouches
+            );
+        } // if
     } // handleTouchEnd
     
     function initTouchData() {
