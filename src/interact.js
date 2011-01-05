@@ -1,4 +1,4 @@
-//= require <cog/cog>
+//= require <cog/src/cog>
 
 /**
 # INTERACT
@@ -96,8 +96,9 @@ INTERACT = (function() {
         
         // check if we need to supply an observable object
         if (! opts.observable) {
-            opts.observable = {};
-            COG.observable(opts.observable);
+            COG.Log.info('creating observable');
+            opts.observable = COG.observable({});
+            globalOpts = opts;
         } // if
         
         // initialise the binder and unbinder

@@ -1,6 +1,5 @@
 demos.draw = function() {
     var demoCanvas = $('#demoCanvas')[0],
-        statusContainer = document.getElementById('statusMsg'),
         eventMonitor = INTERACT.watch(demoCanvas),
         context = demoCanvas.getContext('2d');
     

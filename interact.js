@@ -338,7 +338,7 @@ var Loopage = exports.Loopage = (function() {
     };
 })();
 function getHandlers(target) {
-    return target.gtObsHandlers;
+    return target.obsHandlers;
 } // getHandlers
 
 function getHandlersForName(target, eventName) {
@@ -351,12 +351,12 @@ function getHandlersForName(target, eventName) {
 } // getHandlersForName
 
 var observable = exports.observable = function(target) {
-    if (! target) { return; }
+    if (! target) { return null; }
 
     /* initialization code */
 
     if (! getHandlers(target)) {
-        target.gtObsHandlers = {};
+        target.obsHandlers = {};
     } // if
 
     var attached = target.bind || target.trigger || target.unbind;
@@ -394,17 +394,25 @@ var observable = exports.observable = function(target) {
         }; // trigger
 
         target.unbind = function(eventName, callbackId) {
-            var eventCallbacks = getHandlersForName(target, eventName);
-            for (var ii = 0; eventCallbacks && (ii < eventCallbacks.length); ii++) {
-                if (eventCallbacks[ii].id === callbackId) {
-                    eventCallbacks.splice(ii, 1);
-                    break;
-                } // if
-            } // for
+            if (typeof eventName === 'undefined') {
+                COG.Log.info('unbound all handlers');
+                target.obsHandlers = {};
+            }
+            else {
+                var eventCallbacks = getHandlersForName(target, eventName);
+                for (var ii = 0; eventCallbacks && (ii < eventCallbacks.length); ii++) {
+                    if (eventCallbacks[ii].id === callbackId) {
+                        eventCallbacks.splice(ii, 1);
+                        break;
+                    } // if
+                } // for
+            } // if..else
 
             return target;
         }; // unbind
     } // if
+
+    return target;
 };
 var configurables = {};
 
@@ -584,7 +592,7 @@ var EventMonitor = function(target, handlers, params) {
     /* exports */
 
     function bind() {
-        observable.bind.apply(null, arguments);
+        return observable.bind.apply(null, arguments);
     } // bind
 
     function pannable(opts) {
@@ -598,6 +606,8 @@ var EventMonitor = function(target, handlers, params) {
     } // pannable
 
     function unbind() {
+        observable.unbind();
+
         for (var ii = 0; ii < handlerInstances.length; ii++) {
             handlerInstances[ii].unbind();
         } // for
@@ -702,8 +712,9 @@ var EventMonitor = function(target, handlers, params) {
         }, caps);
 
         if (! opts.observable) {
-            opts.observable = {};
-            COG.observable(opts.observable);
+            COG.Log.info('creating observable');
+            opts.observable = COG.observable({});
+            globalOpts = opts;
         } // if
 
         opts.binder = opts.isIE ? ieBind : genBinder(opts.bindToBody);
