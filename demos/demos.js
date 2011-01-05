@@ -77,7 +77,7 @@ var demos = (function() {
         canvas = $('#demoCanvas')[0];
         
         $('ul#demos a').click(runDemo);
-        loadDemo.apply($('ul#demos a')[0]);
+        runDemo.apply($('ul#demos a')[0]);
     });
     
     var self = {

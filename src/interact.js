@@ -1,4 +1,5 @@
-//= require <cog/src/cog>
+//= require <cog/src/observable>
+//= require <cog/src/log>
 
 /**
 # INTERACT
@@ -39,7 +40,7 @@ INTERACT = (function() {
             // TODO: perform capabilities check
             for (var checkKey in interactor.checks) {
                 var check = interactor.checks[checkKey];
-                COG.Log.info('checking ' + checkKey + ' capability. require: ' + check + ', capability = ' + capabilities[checkKey]);
+                COG.info('checking ' + checkKey + ' capability. require: ' + check + ', capability = ' + capabilities[checkKey]);
                 
                 checksPass = checksPass && (check === capabilities[checkKey]);
             } // for
@@ -96,7 +97,7 @@ INTERACT = (function() {
         
         // check if we need to supply an observable object
         if (! opts.observable) {
-            COG.Log.info('creating observable');
+            COG.info('creating observable');
             opts.observable = COG.observable({});
             globalOpts = opts;
         } // if
