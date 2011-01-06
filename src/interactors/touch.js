@@ -1,6 +1,7 @@
 var TouchHandler = function(targetElement, observable, opts) {
     opts = COG.extend({
-        detailedEvents: false
+        detailedEvents: false,
+        inertia: false
     }, opts);
     
     // initialise constants
@@ -8,7 +9,7 @@ var TouchHandler = function(targetElement, observable, opts) {
         INERTIA_TIMEOUT_MOUSE = 100,
         INERTIA_TIMEOUT_TOUCH = 250,
         THRESHOLD_DOUBLETAP = 300,
-        THRESHOLD_PINCHZOOM = 5,
+        THRESHOLD_PINCHZOOM = 20,
         MIN_MOVEDIST = 7,
         EMPTY_TOUCH_DATA = {
             x: 0,
@@ -196,6 +197,8 @@ var TouchHandler = function(targetElement, observable, opts) {
                         var touchDistance = calcTouchDistance(touchesCurrent),
                             distanceDelta = Math.abs(startDistance - touchDistance);
                             
+                        COG.info('distance delta = ' + distanceDelta);
+                            
                         // fire a touch multi event for custom event handling
                         if (detailedEvents) {
                             observable.trigger('pointerMulti', touchesCurrent, offset);
@@ -203,7 +206,7 @@ var TouchHandler = function(targetElement, observable, opts) {
                         
                         // if the distance is not great enough then switch back to move 
                         if (distanceDelta < THRESHOLD_PINCHZOOM) {
-                            touchMode == TOUCH_MODE_MOVE;
+                            touchMode = TOUCH_MODE_MOVE;
                         }
                         // otherwise, raise the zoom event
                         else {
@@ -251,15 +254,17 @@ var TouchHandler = function(targetElement, observable, opts) {
             
             // get the current touches
             touchesCurrent = getTouchData(evt);
-            if ((! touchesCurrent) && touchMode === TOUCH_MODE_TAP) {
-                // trigger the pointer move event
-                observable.trigger(
-                    'pointerTap',
-                    changedTouches,
-                    offsetTouches
-                );
-                
-                COG.info('tapped');
+            
+            // if this is the last touch to be removed do some extra checks
+            if (! touchesCurrent) {
+                if (touchMode === TOUCH_MODE_TAP) {
+                    // trigger the pointer move event
+                    observable.trigger(
+                        'pointerTap',
+                        changedTouches,
+                        offsetTouches
+                    );
+                } // if
             } // if
             
             // trigger the pointer up

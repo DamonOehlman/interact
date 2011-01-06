@@ -49,7 +49,7 @@ COG.extend = function() {
             handlers[eventName] = [];
         } // if
 
-        return handlers[eventName];
+        return (handlers['*'] ? handlers['*'] : []).concat(handlers[eventName]);
     } // getHandlersForName
 
     /**
@@ -370,6 +370,10 @@ function preventDefault(evt) {
     } // if..else
 } // preventDefault
 var MouseHandler = function(targetElement, observable, opts) {
+    opts = COG.extend({
+        inertia: false
+    }, opts);
+
     var WHEEL_DELTA_STEP = 120,
         WHEEL_DELTA_LEVEL = WHEEL_DELTA_STEP * 8;
 
@@ -501,14 +505,15 @@ register('pointer', {
 });
 var TouchHandler = function(targetElement, observable, opts) {
     opts = COG.extend({
-        detailedEvents: false
+        detailedEvents: false,
+        inertia: false
     }, opts);
 
     var DEFAULT_INERTIA_MAX = 500,
         INERTIA_TIMEOUT_MOUSE = 100,
         INERTIA_TIMEOUT_TOUCH = 250,
         THRESHOLD_DOUBLETAP = 300,
-        THRESHOLD_PINCHZOOM = 5,
+        THRESHOLD_PINCHZOOM = 20,
         MIN_MOVEDIST = 7,
         EMPTY_TOUCH_DATA = {
             x: 0,
@@ -674,12 +679,14 @@ var TouchHandler = function(targetElement, observable, opts) {
                         var touchDistance = calcTouchDistance(touchesCurrent),
                             distanceDelta = Math.abs(startDistance - touchDistance);
 
+                        COG.info('distance delta = ' + distanceDelta);
+
                         if (detailedEvents) {
                             observable.trigger('pointerMulti', touchesCurrent, offset);
                         } // if
 
                         if (distanceDelta < THRESHOLD_PINCHZOOM) {
-                            touchMode == TOUCH_MODE_MOVE;
+                            touchMode = TOUCH_MODE_MOVE;
                         }
                         else {
                             var current = getTouchCenter(touchesCurrent),
@@ -721,14 +728,15 @@ var TouchHandler = function(targetElement, observable, opts) {
                 offsetTouches = copyTouches(changedTouches, offset.x, offset.y);
 
             touchesCurrent = getTouchData(evt);
-            if ((! touchesCurrent) && touchMode === TOUCH_MODE_TAP) {
-                observable.trigger(
-                    'pointerTap',
-                    changedTouches,
-                    offsetTouches
-                );
 
-                COG.info('tapped');
+            if (! touchesCurrent) {
+                if (touchMode === TOUCH_MODE_TAP) {
+                    observable.trigger(
+                        'pointerTap',
+                        changedTouches,
+                        offsetTouches
+                    );
+                } // if
             } // if
 
             observable.trigger(

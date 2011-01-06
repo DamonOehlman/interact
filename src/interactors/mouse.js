@@ -1,4 +1,8 @@
 var MouseHandler = function(targetElement, observable, opts) {
+    opts = COG.extend({
+        inertia: false
+    }, opts);
+    
     // initialise constants
     var WHEEL_DELTA_STEP = 120,
         WHEEL_DELTA_LEVEL = WHEEL_DELTA_STEP * 8;
