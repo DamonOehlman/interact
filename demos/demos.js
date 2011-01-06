@@ -101,10 +101,15 @@ var demos = (function() {
     /* initialization */    
     
     $(document).ready(function() {
+        var firstDemo = $('.demos ul a')[0];
+        
         canvas = $('#demoCanvas')[0];
         
         $('.demos ul a').click(runDemo);
-        runDemo.apply($('.demos ul a')[0]);
+        
+        if (firstDemo) {
+            runDemo.apply(firstDemo);
+        } // if
     });
     
     var self = {
