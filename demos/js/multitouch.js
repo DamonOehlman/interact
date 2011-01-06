@@ -1,7 +1,13 @@
 demos.multitouch = function() {
     var demoCanvas = $('#demoCanvas')[0],
         context = demoCanvas.getContext('2d'),
-        eventMonitor = demos.eventMonitor = INTERACT.watch(demoCanvas);
+        eventMonitor = demos.eventMonitor = INTERACT.watch(demoCanvas, {
+            detailed: true
+        });
+        
+    function drawTouches() {
+        
+    } // drawTouches
     
     // handle pointer down events
     eventMonitor.bind('pointerDown', function(evt, absXY, relXY) {

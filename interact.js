@@ -49,7 +49,7 @@ COG.extend = function() {
             handlers[eventName] = [];
         } // if
 
-        return (handlers['*'] ? handlers['*'] : []).concat(handlers[eventName]);
+        return handlers[eventName];
     } // getHandlersForName
 
     /**
@@ -89,11 +89,17 @@ COG.extend = function() {
                 } // if
 
                 eventArgs = Array.prototype.slice.call(arguments, 1);
+
+                if (target.eventInterceptor) {
+                    target.eventInterceptor(eventName, evt, eventArgs);
+                } // if
+
                 eventArgs.unshift(evt);
 
                 for (var ii = eventCallbacks.length; ii-- && (! evt.cancel); ) {
                     eventCallbacks[ii].fn.apply(self, eventArgs);
                 } // for
+
 
                 return evt;
             }; // trigger
@@ -291,7 +297,8 @@ var EventMonitor = function(target, handlers, params) {
     function point(x, y) {
         return {
             x: x ? x : 0,
-            y: y ? y : 0
+            y: y ? y : 0,
+            count: 1
         };
     } // point
 
@@ -505,7 +512,7 @@ register('pointer', {
 });
 var TouchHandler = function(targetElement, observable, opts) {
     opts = COG.extend({
-        detailedEvents: false,
+        detailed: false,
         inertia: false
     }, opts);
 
@@ -532,7 +539,7 @@ var TouchHandler = function(targetElement, observable, opts) {
         touchesCurrent,
         startDistance,
         touchesLast,
-        detailedEvents = opts.detailedEvents,
+        detailedEvents = opts.detailed,
         scaling = 1;
 
     /* internal functions */
@@ -682,7 +689,11 @@ var TouchHandler = function(targetElement, observable, opts) {
                         COG.info('distance delta = ' + distanceDelta);
 
                         if (detailedEvents) {
-                            observable.trigger('pointerMulti', touchesCurrent, offset);
+                            observable.trigger(
+                                'pointerMulti',
+                                touchesCurrent,
+                                copyTouches(touchesCurrent, offset.x, offset.y)
+                            );
                         } // if
 
                         if (distanceDelta < THRESHOLD_PINCHZOOM) {
@@ -696,7 +707,7 @@ var TouchHandler = function(targetElement, observable, opts) {
                             observable.trigger(
                                 'zoom',
                                 current,
-                                copyTouches(current, offset.x, offset.y),
+                                pointerOffset(current, offset),
                                 scaleChange
                             );
 

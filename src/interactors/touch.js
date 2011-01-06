@@ -1,6 +1,6 @@
 var TouchHandler = function(targetElement, observable, opts) {
     opts = COG.extend({
-        detailedEvents: false,
+        detailed: false,
         inertia: false
     }, opts);
     
@@ -30,7 +30,7 @@ var TouchHandler = function(targetElement, observable, opts) {
         touchesCurrent,
         startDistance,
         touchesLast,
-        detailedEvents = opts.detailedEvents,
+        detailedEvents = opts.detailed,
         scaling = 1;
 
     /* internal functions */
@@ -201,7 +201,11 @@ var TouchHandler = function(targetElement, observable, opts) {
                             
                         // fire a touch multi event for custom event handling
                         if (detailedEvents) {
-                            observable.trigger('pointerMulti', touchesCurrent, offset);
+                            observable.trigger(
+                                'pointerMulti', 
+                                touchesCurrent, 
+                                copyTouches(touchesCurrent, offset.x, offset.y)
+                            );
                         } // if
                         
                         // if the distance is not great enough then switch back to move 
@@ -218,7 +222,7 @@ var TouchHandler = function(targetElement, observable, opts) {
                             observable.trigger(
                                 'zoom', 
                                 current, 
-                                copyTouches(current, offset.x, offset.y),
+                                pointerOffset(current, offset),
                                 scaleChange
                             );
                             

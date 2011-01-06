@@ -64,7 +64,8 @@ INTERACT = (function() {
     function point(x, y) {
         return {
             x: x ? x : 0,
-            y: y ? y : 0
+            y: y ? y : 0,
+            count: 1
         };
     } // point
     
