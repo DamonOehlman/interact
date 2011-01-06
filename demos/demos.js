@@ -52,7 +52,11 @@ var demos = (function() {
             self.current = demo;
             
             $('#demoCode')[0].innerText = demoHandler.toString();
-            prettyPrint();
+            
+            // format if pretty print is available
+            if (typeof prettyPrint !== 'undefined') {
+                prettyPrint();
+            } // if
         } // if
     } // showDemo
     
