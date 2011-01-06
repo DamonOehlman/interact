@@ -72,10 +72,12 @@ var demos = (function() {
             } // if
         }
         else {
+            status('loading demo');
             loadScript(DEMO_PATH + 'js/' + demo + '.js?v=' + new Date().getTime(), function() {
                 loadedDemos[demo] = true;
                 if (callback) {
                     callback(demo);
+                    status('');
                 } // if
             });
         } // if..else
