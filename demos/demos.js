@@ -112,7 +112,8 @@ var demos = (function() {
         eventMonitor: null,
         
         load: loadDemo,
-        status: status
+        status: status,
+        show: showDemo
     };
     
     return self;
