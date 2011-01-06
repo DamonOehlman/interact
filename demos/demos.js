@@ -1,4 +1,18 @@
 var demos = (function() {
+    // initialise constants
+    var DEMO_PATH = (function() {
+        var regex = /demos\.js/i;
+        
+        for (var ii = 0; ii < document.scripts.length; ii++) {
+            var src = document.scripts[ii].src;
+            if (regex.test(src)) {
+                return src.replace(/^(.*)\/.*$/, '$1/');
+            } // if
+        } // for
+        
+        return '';
+    })();
+    
     var loadedDemos = {},
         canvas = null,
         statusTimeout = 0;
@@ -54,7 +68,7 @@ var demos = (function() {
             } // if
         }
         else {
-            loadScript('js/' + demo + '.js?v=' + new Date().getTime(), function() {
+            loadScript(DEMO_PATH + 'js/' + demo + '.js?v=' + new Date().getTime(), function() {
                 loadedDemos[demo] = true;
                 if (callback) {
                     callback(demo);
