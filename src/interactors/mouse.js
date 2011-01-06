@@ -97,7 +97,7 @@ var MouseHandler = function(targetElement, observable, opts) {
             eventName,
             current,
             pointerOffset(current, offset),
-            point(lastX - currentX, lastY - currentY)
+            point(currentX - lastX, currentY - lastY)
         );
         
         lastX = currentX;

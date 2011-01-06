@@ -14,8 +14,8 @@ demos.zoom = function() {
 
         // handle pointer down events
         eventMonitor.bind('pan', function(evt, panX, panY) {
-            imageX -= panX;
-            imageY -= panY;
+            imageX += panX;
+            imageY += panY;
             
             drawImage();
         });

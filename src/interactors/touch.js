@@ -233,8 +233,8 @@ var TouchHandler = function(targetElement, observable, opts) {
                         touchesCurrent,
                         copyTouches(touchesCurrent, offset.x, offset.y),
                         point(
-                            touchesLast.x - touchesCurrent.x, 
-                            touchesLast.y - touchesCurrent.y)
+                            touchesCurrent.x - touchesLast.x, 
+                            touchesCurrent.y - touchesLast.y)
                     );
                 } // if
             } // if
