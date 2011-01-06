@@ -118,7 +118,11 @@ var demos = (function() {
         
         load: loadDemo,
         status: status,
-        show: showDemo
+        show: function(demo) {
+            loadDemo(demo, function() {
+                showDemo(demo);
+            });
+        }
     };
     
     return self;
