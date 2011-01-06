@@ -635,20 +635,30 @@ var TouchHandler = function(targetElement, observable, opts) {
         var targ = evt.target ? evt.target : evt.srcElement;
 
         if (targ && (targ === targetElement)) {
-            var changedTouches = getTouchData(evt, 'changedTouches');
-
-            touchesStart = getTouchData(evt);
             offset = getOffset(targetElement);
 
-            touchMode = TOUCH_MODE_TAP;
+            var changedTouches = getTouchData(evt, 'changedTouches'),
+                relTouches = copyTouches(changedTouches, offset.x, offset.y);
 
-            observable.trigger(
-                'pointerDown',
-                changedTouches,
-                copyTouches(changedTouches, offset.x, offset.y)
-            );
+            if (! touchesStart) {
+                touchMode = TOUCH_MODE_TAP;
 
-            if (touchesStart.count > 0) {
+                observable.trigger(
+                    'pointerDown',
+                    changedTouches,
+                    relTouches);
+            } // if
+
+            if (detailedEvents) {
+                observable.trigger(
+                    'pointerDownMulti',
+                    changedTouches,
+                    relTouches);
+            } // if
+
+            touchesStart = getTouchData(evt);
+
+            if (touchesStart.count > 1) {
                 startDistance = calcTouchDistance(touchesStart);
             } // if
 
@@ -686,16 +696,6 @@ var TouchHandler = function(targetElement, observable, opts) {
                         var touchDistance = calcTouchDistance(touchesCurrent),
                             distanceDelta = Math.abs(startDistance - touchDistance);
 
-                        COG.info('distance delta = ' + distanceDelta);
-
-                        if (detailedEvents) {
-                            observable.trigger(
-                                'pointerMulti',
-                                touchesCurrent,
-                                copyTouches(touchesCurrent, offset.x, offset.y)
-                            );
-                        } // if
-
                         if (distanceDelta < THRESHOLD_PINCHZOOM) {
                             touchMode = TOUCH_MODE_MOVE;
                         }
@@ -726,6 +726,14 @@ var TouchHandler = function(targetElement, observable, opts) {
                             touchesCurrent.y - touchesLast.y)
                     );
                 } // if
+
+                if (detailedEvents) {
+                    observable.trigger(
+                        'pointerMoveMulti',
+                        touchesCurrent,
+                        copyTouches(touchesCurrent, offset.x, offset.y)
+                    );
+                } // if
             } // if
 
             touchesLast = copyTouches(touchesCurrent);
@@ -748,13 +756,23 @@ var TouchHandler = function(targetElement, observable, opts) {
                         offsetTouches
                     );
                 } // if
+
+                observable.trigger(
+                    'pointerUp',
+                    changedTouches,
+                    offsetTouches
+                );
+
+                touchesStart = null;
             } // if
 
-            observable.trigger(
-                'pointerUp',
-                changedTouches,
-                offsetTouches
-            );
+            if (detailedEvents) {
+                observable.trigger(
+                    'pointerUpMulti',
+                    changedTouches,
+                    offsetTouches
+                );
+            } // if..else
         } // if
     } // handleTouchEnd
 

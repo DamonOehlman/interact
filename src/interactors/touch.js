@@ -131,23 +131,36 @@ var TouchHandler = function(targetElement, observable, opts) {
         var targ = evt.target ? evt.target : evt.srcElement;
         
         if (targ && (targ === targetElement)) {
-            var changedTouches = getTouchData(evt, 'changedTouches');
+            // update the offset
+            offset = getOffset(targetElement);
+
+            // initialise variables
+            var changedTouches = getTouchData(evt, 'changedTouches'),
+                relTouches = copyTouches(changedTouches, offset.x, offset.y);
+            
+            if (! touchesStart) {
+                // reset the touch mode to unknown
+                touchMode = TOUCH_MODE_TAP;
+
+                // trigger the pointer down event
+                observable.trigger(
+                    'pointerDown', 
+                    changedTouches, 
+                    relTouches);
+            } // if
+            
+            // if we are providing detailed events, then trigger the pointer down multi
+            if (detailedEvents) {
+                observable.trigger(
+                    'pointerDownMulti',
+                    changedTouches,
+                    relTouches);
+            } // if
             
             touchesStart = getTouchData(evt);
-            offset = getOffset(targetElement);
-            
-            // reset the touch mode to unknown
-            touchMode = TOUCH_MODE_TAP;
-            
-            // trigger the pointer down event
-            observable.trigger(
-                'pointerDown', 
-                changedTouches, 
-                copyTouches(changedTouches, offset.x, offset.y)
-            );
             
             // check the start distance
-            if (touchesStart.count > 0) {
+            if (touchesStart.count > 1) {
                 startDistance = calcTouchDistance(touchesStart);
             } // if
             
@@ -197,17 +210,6 @@ var TouchHandler = function(targetElement, observable, opts) {
                         var touchDistance = calcTouchDistance(touchesCurrent),
                             distanceDelta = Math.abs(startDistance - touchDistance);
                             
-                        COG.info('distance delta = ' + distanceDelta);
-                            
-                        // fire a touch multi event for custom event handling
-                        if (detailedEvents) {
-                            observable.trigger(
-                                'pointerMulti', 
-                                touchesCurrent, 
-                                copyTouches(touchesCurrent, offset.x, offset.y)
-                            );
-                        } // if
-                        
                         // if the distance is not great enough then switch back to move 
                         if (distanceDelta < THRESHOLD_PINCHZOOM) {
                             touchMode = TOUCH_MODE_MOVE;
@@ -244,6 +246,15 @@ var TouchHandler = function(targetElement, observable, opts) {
                             touchesCurrent.y - touchesLast.y)
                     );
                 } // if
+                
+                // fire a touch multi event for custom event handling
+                if (detailedEvents) {
+                    observable.trigger(
+                        'pointerMoveMulti', 
+                        touchesCurrent, 
+                        copyTouches(touchesCurrent, offset.x, offset.y)
+                    );
+                } // if
             } // if
             
             touchesLast = copyTouches(touchesCurrent);
@@ -269,14 +280,26 @@ var TouchHandler = function(targetElement, observable, opts) {
                         offsetTouches
                     );
                 } // if
+                
+                // trigger the pointer up
+                observable.trigger(
+                    'pointerUp',
+                    changedTouches,
+                    offsetTouches
+                );
+
+                touchesStart = null;
             } // if
             
-            // trigger the pointer up
-            observable.trigger(
-                'pointerUp',
-                changedTouches,
-                offsetTouches
-            );
+            // if we are monitoring detailed events, then trigger up multi
+            if (detailedEvents) {
+                // trigger the pointer up
+                observable.trigger(
+                    'pointerUpMulti',
+                    changedTouches,
+                    offsetTouches
+                );
+            } // if..else
         } // if
     } // handleTouchEnd
     
