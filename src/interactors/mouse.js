@@ -19,6 +19,22 @@ var MouseHandler = function(targetElement, observable, opts) {
     
     /* internal functions */
     
+    function handleClick(evt) {
+        var targ = evt.target ? evt.target : evt.srcElement;
+        
+        if (aggressiveCapture || targ && (targ === targetElement)) {
+            var clickXY = point(
+                evt.pageX ? evt.pageX : evt.screenX,
+                evt.pageY ? evt.pageY : evt.screenY);
+            
+            observable.trigger(
+                'pointerTap', 
+                clickXY, 
+                pointerOffset(clickXY, getOffset(targetElement))
+            );
+        } // if
+    } // handleClick
+    
     function handleMouseDown(evt) {
         var targ = evt.target ? evt.target : evt.srcElement;
         
@@ -125,6 +141,7 @@ var MouseHandler = function(targetElement, observable, opts) {
     opts.binder('mousedown', handleMouseDown, false);
     opts.binder('mousemove', handleMouseMove, false);
     opts.binder('mouseup', handleMouseUp, false);
+    opts.binder('click', handleClick, false);
     
     // bind mouse wheel events
     opts.binder("mousewheel", handleWheel, window);
