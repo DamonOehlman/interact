@@ -385,8 +385,8 @@ var MouseHandler = function(targetElement, observable, opts) {
     var WHEEL_DELTA_STEP = 120,
         WHEEL_DELTA_LEVEL = WHEEL_DELTA_STEP * 8;
 
-    var aggressiveCapture = typeof FlashCanvas != 'undefined',
-        ignoreButton = opts.isIE,
+    var ignoreButton = opts.isIE,
+        isFlashCanvas = typeof FlashCanvas != 'undefined',
         buttonDown = false,
         start,
         offset,
@@ -398,9 +398,7 @@ var MouseHandler = function(targetElement, observable, opts) {
     /* internal functions */
 
     function handleClick(evt) {
-        var targ = evt.target ? evt.target : evt.srcElement;
-
-        if (aggressiveCapture || targ && (targ === targetElement)) {
+        if (matchTarget(evt)) {
             var clickXY = point(
                 evt.pageX ? evt.pageX : evt.screenX,
                 evt.pageY ? evt.pageY : evt.screenY);
@@ -414,9 +412,7 @@ var MouseHandler = function(targetElement, observable, opts) {
     } // handleClick
 
     function handleDoubleClick(evt) {
-        var targ = evt.target ? evt.target : evt.srcElement;
-
-        if (aggressiveCapture || targ && (targ === targetElement)) {
+        if (matchTarget(evt)) {
             var clickXY = point(
                 evt.pageX ? evt.pageX : evt.screenX,
                 evt.pageY ? evt.pageY : evt.screenY);
@@ -430,12 +426,10 @@ var MouseHandler = function(targetElement, observable, opts) {
     } // handleDoubleClick
 
     function handleMouseDown(evt) {
-        var targ = evt.target ? evt.target : evt.srcElement;
-
-        if (aggressiveCapture || targ && (targ === targetElement)) {
+        if (matchTarget(evt)) {
             buttonDown = ignoreButton || (evt.button === 0);
             if (buttonDown) {
-                targ.style.cursor = 'move';
+                targetElement.style.cursor = 'move';
                 preventDefault(evt);
 
                 lastX = evt.pageX ? evt.pageX : evt.screenX;
@@ -453,24 +447,20 @@ var MouseHandler = function(targetElement, observable, opts) {
     } // mouseDown
 
     function handleMouseMove(evt) {
-        var targ = evt.target ? evt.target : evt.srcElement;
-
         currentX = evt.pageX ? evt.pageX : evt.screenX;
         currentY = evt.pageY ? evt.pageY : evt.screenY;
 
-        if (buttonDown && (aggressiveCapture || targ && (targ === targetElement))) {
+        if (buttonDown && matchTarget(evt)) {
             triggerCurrent('pointerMove');
         } // if
     } // mouseMove
 
     function handleMouseUp(evt) {
-        var targ = evt.target ? evt.target : evt.srcElement;
-
         if (buttonDown && (evt.button === 0)) {
             buttonDown = false;
 
-            if (aggressiveCapture || targ && (targ === targetElement)) {
-                targ.style.cursor = 'default';
+            if (matchTarget(evt)) {
+                targetElement.style.cursor = 'default';
                 triggerCurrent('pointerUp');
             } // if
 
@@ -478,9 +468,7 @@ var MouseHandler = function(targetElement, observable, opts) {
     } // mouseUp
 
     function handleWheel(evt) {
-        var targ = evt.target ? evt.target : evt.srcElement;
-
-        if (aggressiveCapture || targ && (targ === targetElement)) {
+        if (matchTarget(evt)) {
             var deltaY;
 
             if (evt.detail) {
@@ -504,6 +492,16 @@ var MouseHandler = function(targetElement, observable, opts) {
             } // if
         } // if
     } // handleWheel
+
+    function matchTarget(evt) {
+        var targ = evt.target ? evt.target : evt.srcElement;
+
+        if (isFlashCanvas) {
+            targ = targ.parentNode;
+        } // if
+
+        return targ && (targ === targetElement);
+    } // matchTarget
 
     function triggerCurrent(eventName, includeTotal) {
         var current = point(currentX, currentY);

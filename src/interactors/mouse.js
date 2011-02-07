@@ -8,8 +8,8 @@ var MouseHandler = function(targetElement, observable, opts) {
         WHEEL_DELTA_LEVEL = WHEEL_DELTA_STEP * 8;
     
     // initialise variables
-    var aggressiveCapture = typeof FlashCanvas != 'undefined',
-        ignoreButton = opts.isIE,
+    var ignoreButton = opts.isIE,
+        isFlashCanvas = typeof FlashCanvas != 'undefined',
         buttonDown = false,
         start,
         offset,
@@ -21,9 +21,7 @@ var MouseHandler = function(targetElement, observable, opts) {
     /* internal functions */
     
     function handleClick(evt) {
-        var targ = evt.target ? evt.target : evt.srcElement;
-        
-        if (aggressiveCapture || targ && (targ === targetElement)) {
+        if (matchTarget(evt)) {
             var clickXY = point(
                 evt.pageX ? evt.pageX : evt.screenX,
                 evt.pageY ? evt.pageY : evt.screenY);
@@ -37,9 +35,7 @@ var MouseHandler = function(targetElement, observable, opts) {
     } // handleClick
     
     function handleDoubleClick(evt) {
-        var targ = evt.target ? evt.target : evt.srcElement;
-        
-        if (aggressiveCapture || targ && (targ === targetElement)) {
+        if (matchTarget(evt)) {
             var clickXY = point(
                 evt.pageX ? evt.pageX : evt.screenX,
                 evt.pageY ? evt.pageY : evt.screenY);
@@ -53,13 +49,11 @@ var MouseHandler = function(targetElement, observable, opts) {
     } // handleDoubleClick    
     
     function handleMouseDown(evt) {
-        var targ = evt.target ? evt.target : evt.srcElement;
-        
-        if (aggressiveCapture || targ && (targ === targetElement)) {
+        if (matchTarget(evt)) {
             buttonDown = ignoreButton || (evt.button === 0);
             if (buttonDown) {
                 // update the cursor and prevent the default
-                targ.style.cursor = 'move';
+                targetElement.style.cursor = 'move';
                 preventDefault(evt);
                 
                 lastX = evt.pageX ? evt.pageX : evt.screenX;
@@ -77,26 +71,22 @@ var MouseHandler = function(targetElement, observable, opts) {
     } // mouseDown
 
     function handleMouseMove(evt) {
-        var targ = evt.target ? evt.target : evt.srcElement;
-            
         // capture the current x and current y
         currentX = evt.pageX ? evt.pageX : evt.screenX;
         currentY = evt.pageY ? evt.pageY : evt.screenY;
         
-        if (buttonDown && (aggressiveCapture || targ && (targ === targetElement))) {
+        if (buttonDown && matchTarget(evt)) {
             triggerCurrent('pointerMove');
         } // if
     } // mouseMove
 
     function handleMouseUp(evt) {
-        var targ = evt.target ? evt.target : evt.srcElement;
-        
         if (buttonDown && (evt.button === 0)) {
             buttonDown = false;
             
             // if the button was released on this element, then trigger the event
-            if (aggressiveCapture || targ && (targ === targetElement)) {
-                targ.style.cursor = 'default';
+            if (matchTarget(evt)) {
+                targetElement.style.cursor = 'default';
                 triggerCurrent('pointerUp');
             } // if
             
@@ -105,9 +95,7 @@ var MouseHandler = function(targetElement, observable, opts) {
     } // mouseUp
     
     function handleWheel(evt) {
-        var targ = evt.target ? evt.target : evt.srcElement;
-        
-        if (aggressiveCapture || targ && (targ === targetElement)) {
+        if (matchTarget(evt)) {
             var deltaY;
             
             if (evt.detail) {
@@ -130,7 +118,17 @@ var MouseHandler = function(targetElement, observable, opts) {
                 preventDefault(evt); 
             } // if
         } // if
-    } // handleWheel    
+    } // handleWheel  
+    
+    function matchTarget(evt) {
+        var targ = evt.target ? evt.target : evt.srcElement;
+
+        if (isFlashCanvas) {
+            targ = targ.parentNode;
+        } // if
+        
+        return targ && (targ === targetElement);
+    } // matchTarget
     
     function triggerCurrent(eventName, includeTotal) {
         var current = point(currentX, currentY);
