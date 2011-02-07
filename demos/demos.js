@@ -42,7 +42,10 @@ var demos = (function() {
         
         // if we have a canvas, then clear it
         if (canvas) {
-            canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+            var context = canvas.getContext('2d');
+            if (context) {
+                context.clearRect(0, 0, canvas.width, canvas.height);
+            } // if
         } // if
         
         var demoHandler = demos[demo];
