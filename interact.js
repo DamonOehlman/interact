@@ -412,10 +412,14 @@ var MouseHandler = function(targetElement, observable, opts) {
     } // handleClick
 
     function handleDoubleClick(evt) {
+        COG.info('captured double click');
+
         if (matchTarget(evt)) {
             var clickXY = point(
                 evt.pageX ? evt.pageX : evt.screenX,
                 evt.pageY ? evt.pageY : evt.screenY);
+
+            COG.info('captured double click + target matched');
 
             observable.trigger(
                 'doubleTap',
@@ -427,7 +431,7 @@ var MouseHandler = function(targetElement, observable, opts) {
 
     function handleMouseDown(evt) {
         if (matchTarget(evt)) {
-            buttonDown = ignoreButton || (evt.button === 0);
+            buttonDown = isLeftButton(evt);
             if (buttonDown) {
                 targetElement.style.cursor = 'move';
                 preventDefault(evt);
@@ -456,7 +460,7 @@ var MouseHandler = function(targetElement, observable, opts) {
     } // mouseMove
 
     function handleMouseUp(evt) {
-        if (buttonDown && (evt.button === 0)) {
+        if (buttonDown && isLeftButton(evt)) {
             buttonDown = false;
 
             if (matchTarget(evt)) {
@@ -471,11 +475,16 @@ var MouseHandler = function(targetElement, observable, opts) {
         if (matchTarget(evt)) {
             var deltaY;
 
+            evt = evt || window.event;
+
             if (evt.detail) {
                 deltaY = evt.axis === 2 ? -evt.detail * WHEEL_DELTA_STEP : 0;
             }
             else {
-                deltaY = evt.wheelDeltaY;
+                deltaY = evt.wheelDeltaY ? evt.wheelDeltaY : evt.wheelDelta;
+                if (window.opera) {
+                    deltaY = -deltaY;
+                } // if
             } // if..else
 
             if (deltaY !== 0) {
@@ -489,16 +498,22 @@ var MouseHandler = function(targetElement, observable, opts) {
                 );
 
                 preventDefault(evt);
+                evt.returnValue = false;
             } // if
         } // if
     } // handleWheel
 
+    function isLeftButton(evt) {
+        evt = evt || window.event;
+        var button = evt.which || evt.button;
+        return button == 1;
+    } // leftPressed
+
     function matchTarget(evt) {
         var targ = evt.target ? evt.target : evt.srcElement;
-
-        if (isFlashCanvas) {
+        while (targ && targ.nodeName && (targ.nodeName.toUpperCase() != 'CANVAS')) {
             targ = targ.parentNode;
-        } // if
+        } // while
 
         return targ && (targ === targetElement);
     } // matchTarget
@@ -524,8 +539,8 @@ var MouseHandler = function(targetElement, observable, opts) {
         opts.unbinder('mousemove', handleMouseMove, false);
         opts.unbinder('mouseup', handleMouseUp, false);
 
-        opts.unbinder("mousewheel", handleWheel, window);
-        opts.unbinder("DOMMouseScroll", handleWheel, window);
+        opts.unbinder("mousewheel", handleWheel, document);
+        opts.unbinder("DOMMouseScroll", handleWheel, document);
     } // unbind
 
     opts.binder('mousedown', handleMouseDown, false);
@@ -534,8 +549,8 @@ var MouseHandler = function(targetElement, observable, opts) {
     opts.binder('click', handleClick, false);
     opts.binder('dblclick', handleDoubleClick, false);
 
-    opts.binder("mousewheel", handleWheel, window);
-    opts.binder("DOMMouseScroll", handleWheel, window);
+    opts.binder('mousewheel', handleWheel, document);
+    opts.binder('DOMMouseScroll', handleWheel, document);
 
     return {
         unbind: unbind
