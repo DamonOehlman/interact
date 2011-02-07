@@ -386,6 +386,7 @@ var MouseHandler = function(targetElement, observable, opts) {
         WHEEL_DELTA_LEVEL = WHEEL_DELTA_STEP * 8;
 
     var aggressiveCapture = typeof FlashCanvas != 'undefined',
+        ignoreButton = opts.isIE,
         buttonDown = false,
         start,
         offset,
@@ -432,7 +433,7 @@ var MouseHandler = function(targetElement, observable, opts) {
         var targ = evt.target ? evt.target : evt.srcElement;
 
         if (aggressiveCapture || targ && (targ === targetElement)) {
-            buttonDown = (evt.button === 0);
+            buttonDown = ignoreButton || (evt.button === 0);
             if (buttonDown) {
                 targ.style.cursor = 'move';
                 preventDefault(evt);

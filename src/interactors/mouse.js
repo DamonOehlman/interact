@@ -9,6 +9,7 @@ var MouseHandler = function(targetElement, observable, opts) {
     
     // initialise variables
     var aggressiveCapture = typeof FlashCanvas != 'undefined',
+        ignoreButton = opts.isIE,
         buttonDown = false,
         start,
         offset,
@@ -55,7 +56,7 @@ var MouseHandler = function(targetElement, observable, opts) {
         var targ = evt.target ? evt.target : evt.srcElement;
         
         if (aggressiveCapture || targ && (targ === targetElement)) {
-            buttonDown = (evt.button === 0);
+            buttonDown = ignoreButton || (evt.button === 0);
             if (buttonDown) {
                 // update the cursor and prevent the default
                 targ.style.cursor = 'move';
