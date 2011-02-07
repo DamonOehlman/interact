@@ -87,7 +87,7 @@ INTERACT = (function() {
         opts = COG.extend({
             bindToBody: false,
             observable: null,
-            isIE: false,
+            isIE: typeof window.attachEvent != 'undefined',
             types: null
         }, opts);
         

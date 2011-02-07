@@ -28,12 +28,28 @@ var MouseHandler = function(targetElement, observable, opts) {
                 evt.pageY ? evt.pageY : evt.screenY);
             
             observable.trigger(
-                'pointerTap', 
+                'tap', 
                 clickXY, 
                 pointerOffset(clickXY, getOffset(targetElement))
             );
         } // if
     } // handleClick
+    
+    function handleDoubleClick(evt) {
+        var targ = evt.target ? evt.target : evt.srcElement;
+        
+        if (aggressiveCapture || targ && (targ === targetElement)) {
+            var clickXY = point(
+                evt.pageX ? evt.pageX : evt.screenX,
+                evt.pageY ? evt.pageY : evt.screenY);
+            
+            observable.trigger(
+                'doubleTap', 
+                clickXY, 
+                pointerOffset(clickXY, getOffset(targetElement))
+            );
+        } // if
+    } // handleDoubleClick    
     
     function handleMouseDown(evt) {
         var targ = evt.target ? evt.target : evt.srcElement;
@@ -41,6 +57,10 @@ var MouseHandler = function(targetElement, observable, opts) {
         if (aggressiveCapture || targ && (targ === targetElement)) {
             buttonDown = (evt.button === 0);
             if (buttonDown) {
+                // update the cursor and prevent the default
+                targ.style.cursor = 'move';
+                preventDefault(evt);
+                
                 lastX = evt.pageX ? evt.pageX : evt.screenX;
                 lastY = evt.pageY ? evt.pageY : evt.screenY;
                 start = point(lastX, lastY);
@@ -75,10 +95,11 @@ var MouseHandler = function(targetElement, observable, opts) {
             
             // if the button was released on this element, then trigger the event
             if (aggressiveCapture || targ && (targ === targetElement)) {
+                targ.style.cursor = 'default';
                 triggerCurrent('pointerUp');
             } // if
             
-            // check for inertia
+            // TODO: check for inertia
         } // if
     } // mouseUp
     
@@ -101,7 +122,7 @@ var MouseHandler = function(targetElement, observable, opts) {
                 observable.trigger(
                     'zoom', 
                     current, 
-                    pointerOffset(current, offset),
+                    pointerOffset(current, getOffset(targetElement)),
                     deltaY / WHEEL_DELTA_LEVEL
                 );
                 
@@ -142,6 +163,7 @@ var MouseHandler = function(targetElement, observable, opts) {
     opts.binder('mousemove', handleMouseMove, false);
     opts.binder('mouseup', handleMouseUp, false);
     opts.binder('click', handleClick, false);
+    opts.binder('dblclick', handleDoubleClick, false);
     
     // bind mouse wheel events
     opts.binder("mousewheel", handleWheel, window);

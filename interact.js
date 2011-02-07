@@ -80,6 +80,7 @@ COG.extend = function() {
                 var eventCallbacks = getHandlersForName(target, eventName),
                     evt = {
                         cancel: false,
+                        name: eventName,
                         tickCount: new Date().getTime()
                     },
                     eventArgs;
@@ -319,7 +320,7 @@ var EventMonitor = function(target, handlers, params) {
         opts = COG.extend({
             bindToBody: false,
             observable: null,
-            isIE: false,
+            isIE: typeof window.attachEvent != 'undefined',
             types: null
         }, opts);
 
@@ -395,12 +396,47 @@ var MouseHandler = function(targetElement, observable, opts) {
 
     /* internal functions */
 
+    function handleClick(evt) {
+        var targ = evt.target ? evt.target : evt.srcElement;
+
+        if (aggressiveCapture || targ && (targ === targetElement)) {
+            var clickXY = point(
+                evt.pageX ? evt.pageX : evt.screenX,
+                evt.pageY ? evt.pageY : evt.screenY);
+
+            observable.trigger(
+                'tap',
+                clickXY,
+                pointerOffset(clickXY, getOffset(targetElement))
+            );
+        } // if
+    } // handleClick
+
+    function handleDoubleClick(evt) {
+        var targ = evt.target ? evt.target : evt.srcElement;
+
+        if (aggressiveCapture || targ && (targ === targetElement)) {
+            var clickXY = point(
+                evt.pageX ? evt.pageX : evt.screenX,
+                evt.pageY ? evt.pageY : evt.screenY);
+
+            observable.trigger(
+                'doubleTap',
+                clickXY,
+                pointerOffset(clickXY, getOffset(targetElement))
+            );
+        } // if
+    } // handleDoubleClick
+
     function handleMouseDown(evt) {
         var targ = evt.target ? evt.target : evt.srcElement;
 
         if (aggressiveCapture || targ && (targ === targetElement)) {
             buttonDown = (evt.button === 0);
             if (buttonDown) {
+                targ.style.cursor = 'move';
+                preventDefault(evt);
+
                 lastX = evt.pageX ? evt.pageX : evt.screenX;
                 lastY = evt.pageY ? evt.pageY : evt.screenY;
                 start = point(lastX, lastY);
@@ -433,6 +469,7 @@ var MouseHandler = function(targetElement, observable, opts) {
             buttonDown = false;
 
             if (aggressiveCapture || targ && (targ === targetElement)) {
+                targ.style.cursor = 'default';
                 triggerCurrent('pointerUp');
             } // if
 
@@ -458,7 +495,7 @@ var MouseHandler = function(targetElement, observable, opts) {
                 observable.trigger(
                     'zoom',
                     current,
-                    pointerOffset(current, offset),
+                    pointerOffset(current, getOffset(targetElement)),
                     deltaY / WHEEL_DELTA_LEVEL
                 );
 
@@ -495,6 +532,8 @@ var MouseHandler = function(targetElement, observable, opts) {
     opts.binder('mousedown', handleMouseDown, false);
     opts.binder('mousemove', handleMouseMove, false);
     opts.binder('mouseup', handleMouseUp, false);
+    opts.binder('click', handleClick, false);
+    opts.binder('dblclick', handleDoubleClick, false);
 
     opts.binder("mousewheel", handleWheel, window);
     opts.binder("DOMMouseScroll", handleWheel, window);
