@@ -385,7 +385,7 @@ var MouseHandler = function(targetElement, observable, opts) {
     var WHEEL_DELTA_STEP = 120,
         WHEEL_DELTA_LEVEL = WHEEL_DELTA_STEP * 8;
 
-    var aggressiveCapture = false,
+    var aggressiveCapture = typeof FlashCanvas != 'undefined',
         buttonDown = false,
         start,
         offset,
