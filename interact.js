@@ -361,6 +361,15 @@ function getOffset(obj) {
     };
 } // getOffset
 
+function matchTarget(evt, targetElement) {
+    var targ = evt.target ? evt.target : evt.srcElement;
+    while (targ && targ.nodeName && (targ.nodeName.toUpperCase() != 'CANVAS')) {
+        targ = targ.parentNode;
+    } // while
+
+    return targ && (targ === targetElement);
+} // matchTarget
+
 function pointerOffset(absPoint, offset) {
     return {
         x: absPoint.x - (offset ? offset.x : 0),
@@ -398,7 +407,7 @@ var MouseHandler = function(targetElement, observable, opts) {
     /* internal functions */
 
     function handleClick(evt) {
-        if (matchTarget(evt)) {
+        if (matchTarget(evt, targetElement)) {
             var clickXY = point(
                 evt.pageX ? evt.pageX : evt.screenX,
                 evt.pageY ? evt.pageY : evt.screenY);
@@ -414,7 +423,7 @@ var MouseHandler = function(targetElement, observable, opts) {
     function handleDoubleClick(evt) {
         COG.info('captured double click');
 
-        if (matchTarget(evt)) {
+        if (matchTarget(evt, targetElement)) {
             var clickXY = point(
                 evt.pageX ? evt.pageX : evt.screenX,
                 evt.pageY ? evt.pageY : evt.screenY);
@@ -430,7 +439,7 @@ var MouseHandler = function(targetElement, observable, opts) {
     } // handleDoubleClick
 
     function handleMouseDown(evt) {
-        if (matchTarget(evt)) {
+        if (matchTarget(evt, targetElement)) {
             buttonDown = isLeftButton(evt);
             if (buttonDown) {
                 targetElement.style.cursor = 'move';
@@ -454,7 +463,7 @@ var MouseHandler = function(targetElement, observable, opts) {
         currentX = evt.pageX ? evt.pageX : evt.screenX;
         currentY = evt.pageY ? evt.pageY : evt.screenY;
 
-        if (buttonDown && matchTarget(evt)) {
+        if (buttonDown && matchTarget(evt, targetElement)) {
             triggerCurrent('pointerMove');
         } // if
     } // mouseMove
@@ -463,7 +472,7 @@ var MouseHandler = function(targetElement, observable, opts) {
         if (buttonDown && isLeftButton(evt)) {
             buttonDown = false;
 
-            if (matchTarget(evt)) {
+            if (matchTarget(evt, targetElement)) {
                 targetElement.style.cursor = 'default';
                 triggerCurrent('pointerUp');
             } // if
@@ -472,7 +481,7 @@ var MouseHandler = function(targetElement, observable, opts) {
     } // mouseUp
 
     function handleWheel(evt) {
-        if (matchTarget(evt)) {
+        if (matchTarget(evt, targetElement)) {
             var deltaY;
 
             evt = evt || window.event;
@@ -494,7 +503,8 @@ var MouseHandler = function(targetElement, observable, opts) {
                     'zoom',
                     current,
                     pointerOffset(current, getOffset(targetElement)),
-                    deltaY / WHEEL_DELTA_LEVEL
+                    deltaY / WHEEL_DELTA_LEVEL,
+                    'wheel'
                 );
 
                 preventDefault(evt);
@@ -508,15 +518,6 @@ var MouseHandler = function(targetElement, observable, opts) {
         var button = evt.which || evt.button;
         return button == 1;
     } // leftPressed
-
-    function matchTarget(evt) {
-        var targ = evt.target ? evt.target : evt.srcElement;
-        while (targ && targ.nodeName && (targ.nodeName.toUpperCase() != 'CANVAS')) {
-            targ = targ.parentNode;
-        } // while
-
-        return targ && (targ === targetElement);
-    } // matchTarget
 
     function triggerCurrent(eventName, includeTotal) {
         var current = point(currentX, currentY);
@@ -685,9 +686,7 @@ var TouchHandler = function(targetElement, observable, opts) {
     } // fillTouchData
 
     function handleTouchStart(evt) {
-        var targ = evt.target ? evt.target : evt.srcElement;
-
-        if (targ && (targ === targetElement)) {
+        if (matchTarget(evt, targetElement)) {
             offset = getOffset(targetElement);
 
             var changedTouches = getTouchData(evt, 'changedTouches'),
@@ -722,9 +721,7 @@ var TouchHandler = function(targetElement, observable, opts) {
     } // handleTouchStart
 
     function handleTouchMove(evt) {
-        var targ = evt.target ? evt.target : evt.srcElement;
-
-        if (targ && (targ === targetElement)) {
+        if (matchTarget(evt, targetElement)) {
             evt.preventDefault();
 
             touchesCurrent = getTouchData(evt);
@@ -761,7 +758,8 @@ var TouchHandler = function(targetElement, observable, opts) {
                                 'zoom',
                                 current,
                                 pointerOffset(current, offset),
-                                scaleChange
+                                scaleChange,
+                                'pinch'
                             );
 
                             scaling = currentScaling;
@@ -794,8 +792,7 @@ var TouchHandler = function(targetElement, observable, opts) {
     } // handleTouchMove
 
     function handleTouchEnd(evt) {
-        var targ = evt.target ? evt.target : evt.srcElement;
-        if (targ && (targ === targetElement)) {
+        if (matchTarget(evt, targetElement)) {
             var changedTouches = getTouchData(evt, 'changedTouches'),
                 offsetTouches = copyTouches(changedTouches, offset.x, offset.y);
 

@@ -21,7 +21,7 @@ var MouseHandler = function(targetElement, observable, opts) {
     /* internal functions */
     
     function handleClick(evt) {
-        if (matchTarget(evt)) {
+        if (matchTarget(evt, targetElement)) {
             var clickXY = point(
                 evt.pageX ? evt.pageX : evt.screenX,
                 evt.pageY ? evt.pageY : evt.screenY);
@@ -37,7 +37,7 @@ var MouseHandler = function(targetElement, observable, opts) {
     function handleDoubleClick(evt) {
         COG.info('captured double click');
         
-        if (matchTarget(evt)) {
+        if (matchTarget(evt, targetElement)) {
             var clickXY = point(
                 evt.pageX ? evt.pageX : evt.screenX,
                 evt.pageY ? evt.pageY : evt.screenY);
@@ -53,7 +53,7 @@ var MouseHandler = function(targetElement, observable, opts) {
     } // handleDoubleClick    
     
     function handleMouseDown(evt) {
-        if (matchTarget(evt)) {
+        if (matchTarget(evt, targetElement)) {
             buttonDown = isLeftButton(evt);
             if (buttonDown) {
                 // update the cursor and prevent the default
@@ -79,7 +79,7 @@ var MouseHandler = function(targetElement, observable, opts) {
         currentX = evt.pageX ? evt.pageX : evt.screenX;
         currentY = evt.pageY ? evt.pageY : evt.screenY;
         
-        if (buttonDown && matchTarget(evt)) {
+        if (buttonDown && matchTarget(evt, targetElement)) {
             triggerCurrent('pointerMove');
         } // if
     } // mouseMove
@@ -89,7 +89,7 @@ var MouseHandler = function(targetElement, observable, opts) {
             buttonDown = false;
             
             // if the button was released on this element, then trigger the event
-            if (matchTarget(evt)) {
+            if (matchTarget(evt, targetElement)) {
                 targetElement.style.cursor = 'default';
                 triggerCurrent('pointerUp');
             } // if
@@ -99,7 +99,7 @@ var MouseHandler = function(targetElement, observable, opts) {
     } // mouseUp
     
     function handleWheel(evt) {
-        if (matchTarget(evt)) {
+        if (matchTarget(evt, targetElement)) {
             var deltaY;
             
             // handle IE behaviour
@@ -122,7 +122,8 @@ var MouseHandler = function(targetElement, observable, opts) {
                     'zoom', 
                     current, 
                     pointerOffset(current, getOffset(targetElement)),
-                    deltaY / WHEEL_DELTA_LEVEL
+                    deltaY / WHEEL_DELTA_LEVEL,
+                    'wheel'
                 );
                 
                 preventDefault(evt); 
@@ -136,15 +137,6 @@ var MouseHandler = function(targetElement, observable, opts) {
         var button = evt.which || evt.button;
         return button == 1;
     } // leftPressed
-    
-    function matchTarget(evt) {
-        var targ = evt.target ? evt.target : evt.srcElement;
-        while (targ && targ.nodeName && (targ.nodeName.toUpperCase() != 'CANVAS')) {
-            targ = targ.parentNode;
-        } // while
-        
-        return targ && (targ === targetElement);
-    } // matchTarget
     
     function triggerCurrent(eventName, includeTotal) {
         var current = point(currentX, currentY);

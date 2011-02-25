@@ -19,6 +19,15 @@ function getOffset(obj) {
     };
 } // getOffset
 
+function matchTarget(evt, targetElement) {
+    var targ = evt.target ? evt.target : evt.srcElement;
+    while (targ && targ.nodeName && (targ.nodeName.toUpperCase() != 'CANVAS')) {
+        targ = targ.parentNode;
+    } // while
+    
+    return targ && (targ === targetElement);
+} // matchTarget
+
 function pointerOffset(absPoint, offset) {
     return {
         x: absPoint.x - (offset ? offset.x : 0),

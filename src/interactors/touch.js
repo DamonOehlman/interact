@@ -128,9 +128,7 @@ var TouchHandler = function(targetElement, observable, opts) {
     } // fillTouchData
     
     function handleTouchStart(evt) {
-        var targ = evt.target ? evt.target : evt.srcElement;
-        
-        if (targ && (targ === targetElement)) {
+        if (matchTarget(evt, targetElement)) {
             // update the offset
             offset = getOffset(targetElement);
 
@@ -173,9 +171,7 @@ var TouchHandler = function(targetElement, observable, opts) {
     } // handleTouchStart
     
     function handleTouchMove(evt) {
-        var targ = evt.target ? evt.target : evt.srcElement;
-        
-        if (targ && (targ === targetElement)) {
+        if (matchTarget(evt, targetElement)) {
             // prevent the default action
             evt.preventDefault();
             
@@ -225,7 +221,8 @@ var TouchHandler = function(targetElement, observable, opts) {
                                 'zoom', 
                                 current, 
                                 pointerOffset(current, offset),
-                                scaleChange
+                                scaleChange,
+                                'pinch'
                             );
                             
                             // update the scaling
@@ -262,8 +259,7 @@ var TouchHandler = function(targetElement, observable, opts) {
     } // handleTouchMove
     
     function handleTouchEnd(evt) {
-        var targ = evt.target ? evt.target : evt.srcElement;
-        if (targ && (targ === targetElement)) {
+        if (matchTarget(evt, targetElement)) {
             var changedTouches = getTouchData(evt, 'changedTouches'),
                 offsetTouches = copyTouches(changedTouches, offset.x, offset.y);
             
