@@ -21,7 +21,7 @@ function getOffset(obj) {
 
 function matchTarget(evt, targetElement) {
     var targ = evt.target ? evt.target : evt.srcElement;
-    while (targ && targ.nodeName && (targ.nodeName.toUpperCase() != 'CANVAS')) {
+    while (targ && (targ !== targetElement) && targ.nodeName && (targ.nodeName.toUpperCase() != 'CANVAS')) {
         targ = targ.parentNode;
     } // while
     
