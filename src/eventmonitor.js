@@ -6,7 +6,9 @@ var EventMonitor = function(target, handlers, params) {
     }, params);
     
     // initialise constants
-    var MAXMOVE_TAP = 20;
+    var MAXMOVE_TAP = 20,
+        INERTIA_DURATION = 500,
+        INERTIA_MAXDIST = 300;
     
     // initialise variables
     var observable = params.observable,
@@ -19,6 +21,35 @@ var EventMonitor = function(target, handlers, params) {
     // TODO: check that the binder, unbinder and observable have been supplied
     
     /* internals */
+    
+    function checkInertia(events, maxDepth) {
+        var evtCount = events.length, 
+            startIdx = Math.max(1, evtCount - maxDepth), // only look at a max dept
+            includedCount = evtCount - startIdx,
+            vectorX = 0,
+            vectorY = 0,
+            diffX,
+            diffY,
+            diffTicks,
+            totalTicks = 0;
+        
+        for (var ii = startIdx; ii < evtCount; ii++) {
+            diffX = events[ii].x - events[ii - 1].x;
+            diffY = events[ii].y - events[ii - 1].y;
+            diffTicks = events[ii].ticks - events[ii - 1].ticks;
+            
+            totalTicks += diffTicks;
+            vectorX += diffX / diffTicks;
+            vectorY += diffY / diffTicks;
+        } // for
+        
+        // calculate the estimated pixels per millisecond of the vector, and then time by the duration
+        // TODO: make inertia configurable
+        vectorX = Math.min((vectorX / includedCount) * INERTIA_DURATION | 0, INERTIA_MAXDIST);
+        vectorY = Math.min((vectorY / includedCount) * INERTIA_DURATION | 0, INERTIA_MAXDIST);
+        
+        inertiaPan(vectorX, vectorY, COG.easing('quad.out'), INERTIA_DURATION);
+    } // checkInertia
     
     function deltaGreaterThan(value) {
         return Math.abs(totalDeltaX) > value || Math.abs(totalDeltaY) > value;
@@ -45,7 +76,6 @@ var EventMonitor = function(target, handlers, params) {
     
     function handlePointerDown(evt, absXY, relXY) {
         // reset the pan monitor
-        COG.info('reset ' + pans.length + ' pan history');
         pans = [];
         
         totalDeltaX = 0;
@@ -56,8 +86,29 @@ var EventMonitor = function(target, handlers, params) {
         // if the total delta is within tolerances then trigger a tap also
         if (! deltaGreaterThan(MAXMOVE_TAP)) {
             observable.trigger('tap', absXY, relXY);
-        } // if
+        }
+        // otherwise, if we are working with a panning interface check for inertia
+        else if (pannableOpts) {
+            checkInertia(pans, 10);
+        }
     } // handlePointerUP
+    
+    function inertiaPan(changeX, changeY, easing, duration) {
+        var currentX = 0,
+            currentY = 0,
+            lastX = 0;
+        
+        COG.tweenValue(0, changeX, easing, duration, function(val, complete) {
+            lastX = currentX;
+            currentX = val;
+        });
+        
+        COG.tweenValue(0, changeY, easing, duration, function(val, complete) {
+            // trigger the pan
+            observable.trigger('pan', currentX - lastX, val - currentY);
+            currentY = val;
+        });
+    } // inertia pan
     
     /* exports */
     
