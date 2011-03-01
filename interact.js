@@ -719,7 +719,8 @@ var EventMonitor = function(target, handlers, params) {
 
     var MAXMOVE_TAP = 20,
         INERTIA_DURATION = 500,
-        INERTIA_MAXDIST = 300;
+        INERTIA_MAXDIST = 300,
+        INERTIA_TIMEOUT = 50;
 
     var observable = params.observable,
         pannableOpts = null,
@@ -731,31 +732,39 @@ var EventMonitor = function(target, handlers, params) {
 
     /* internals */
 
-    function checkInertia(events, maxDepth) {
+    function checkInertia(events) {
         var evtCount = events.length,
-            startIdx = Math.max(1, evtCount - maxDepth), // only look at a max dept
-            includedCount = evtCount - startIdx,
+            includedCount,
             vectorX = 0,
             vectorY = 0,
             diffX,
             diffY,
             diffTicks,
-            totalTicks = 0;
+            totalTicks = evtCount > 0 ? (new Date().getTime() - events[evtCount-1].ticks) : 0,
+            ii;
 
-        for (var ii = startIdx; ii < evtCount; ii++) {
-            diffX = events[ii].x - events[ii - 1].x;
-            diffY = events[ii].y - events[ii - 1].y;
-            diffTicks = events[ii].ticks - events[ii - 1].ticks;
+        ii = events.length;
+        while (--ii >= 1 && totalTicks < INERTIA_TIMEOUT) {
+            totalTicks += (events[ii].ticks - events[ii - 1].ticks);
+        } // while
 
-            totalTicks += diffTicks;
-            vectorX += diffX / diffTicks;
-            vectorY += diffY / diffTicks;
-        } // for
+        includedCount = evtCount - ii;
 
-        vectorX = Math.min((vectorX / includedCount) * INERTIA_DURATION | 0, INERTIA_MAXDIST);
-        vectorY = Math.min((vectorY / includedCount) * INERTIA_DURATION | 0, INERTIA_MAXDIST);
+        if (includedCount > 1) {
+            for (; ii < evtCount; ii++) {
+                diffX = events[ii].x - events[ii - 1].x;
+                diffY = events[ii].y - events[ii - 1].y;
+                diffTicks = events[ii].ticks - events[ii - 1].ticks;
 
-        inertiaPan(vectorX, vectorY, COG.easing('quad.out'), INERTIA_DURATION);
+                vectorX += diffX / diffTicks;
+                vectorY += diffY / diffTicks;
+            } // for
+
+            vectorX = Math.min((vectorX / includedCount) * INERTIA_DURATION | 0, INERTIA_MAXDIST);
+            vectorY = Math.min((vectorY / includedCount) * INERTIA_DURATION | 0, INERTIA_MAXDIST);
+
+            inertiaPan(vectorX, vectorY, COG.easing('quad.out'), INERTIA_DURATION);
+        } // if
     } // checkInertia
 
     function deltaGreaterThan(value) {
@@ -789,7 +798,7 @@ var EventMonitor = function(target, handlers, params) {
             observable.trigger('tap', absXY, relXY);
         }
         else if (pannableOpts) {
-            checkInertia(pans, 10);
+            checkInertia(pans);
         }
     } // handlePointerUP
 

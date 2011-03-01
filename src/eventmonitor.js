@@ -8,7 +8,8 @@ var EventMonitor = function(target, handlers, params) {
     // initialise constants
     var MAXMOVE_TAP = 20,
         INERTIA_DURATION = 500,
-        INERTIA_MAXDIST = 300;
+        INERTIA_MAXDIST = 300,
+        INERTIA_TIMEOUT = 50;
     
     // initialise variables
     var observable = params.observable,
@@ -22,33 +23,45 @@ var EventMonitor = function(target, handlers, params) {
     
     /* internals */
     
-    function checkInertia(events, maxDepth) {
+    function checkInertia(events) {
         var evtCount = events.length, 
-            startIdx = Math.max(1, evtCount - maxDepth), // only look at a max dept
-            includedCount = evtCount - startIdx,
+            includedCount,
             vectorX = 0,
             vectorY = 0,
             diffX,
             diffY,
             diffTicks,
-            totalTicks = 0;
-        
-        for (var ii = startIdx; ii < evtCount; ii++) {
-            diffX = events[ii].x - events[ii - 1].x;
-            diffY = events[ii].y - events[ii - 1].y;
-            diffTicks = events[ii].ticks - events[ii - 1].ticks;
+            totalTicks = evtCount > 0 ? (new Date().getTime() - events[evtCount-1].ticks) : 0,
+            ii;
             
-            totalTicks += diffTicks;
-            vectorX += diffX / diffTicks;
-            vectorY += diffY / diffTicks;
-        } // for
+        // iterate back through events and check the total duration
+        ii = events.length;
+        while (--ii >= 1 && totalTicks < INERTIA_TIMEOUT) {
+            totalTicks += (events[ii].ticks - events[ii - 1].ticks);
+        } // while
         
-        // calculate the estimated pixels per millisecond of the vector, and then time by the duration
-        // TODO: make inertia configurable
-        vectorX = Math.min((vectorX / includedCount) * INERTIA_DURATION | 0, INERTIA_MAXDIST);
-        vectorY = Math.min((vectorY / includedCount) * INERTIA_DURATION | 0, INERTIA_MAXDIST);
+        // update the included count
+        includedCount = evtCount - ii;
+        // COG.info('checking for inertia, total ticks = ' + totalTicks + ', included count = ' + includedCount);
         
-        inertiaPan(vectorX, vectorY, COG.easing('quad.out'), INERTIA_DURATION);
+        if (includedCount > 1) {
+            // now calculate the velocity (ii will be at the coorect index)
+            for (; ii < evtCount; ii++) {
+                diffX = events[ii].x - events[ii - 1].x;
+                diffY = events[ii].y - events[ii - 1].y;
+                diffTicks = events[ii].ticks - events[ii - 1].ticks;
+
+                vectorX += diffX / diffTicks;
+                vectorY += diffY / diffTicks;
+            } // for
+
+            // calculate the estimated pixels per millisecond of the vector, and then time by the duration
+            // TODO: make inertia configurable
+            vectorX = Math.min((vectorX / includedCount) * INERTIA_DURATION | 0, INERTIA_MAXDIST);
+            vectorY = Math.min((vectorY / includedCount) * INERTIA_DURATION | 0, INERTIA_MAXDIST);
+
+            inertiaPan(vectorX, vectorY, COG.easing('quad.out'), INERTIA_DURATION);
+        } // if
     } // checkInertia
     
     function deltaGreaterThan(value) {
@@ -89,7 +102,7 @@ var EventMonitor = function(target, handlers, params) {
         }
         // otherwise, if we are working with a panning interface check for inertia
         else if (pannableOpts) {
-            checkInertia(pans, 10);
+            checkInertia(pans);
         }
     } // handlePointerUP
     
