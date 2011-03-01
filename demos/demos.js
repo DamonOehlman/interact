@@ -123,9 +123,13 @@ var demos = (function() {
         
         load: loadDemo,
         status: status,
-        show: function(demo) {
+        show: function(demo, callback) {
             loadDemo(demo, function() {
                 showDemo(demo);
+                
+                if (callback) {
+                    callback(demo);
+                } // if
             });
         }
     };
