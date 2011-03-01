@@ -111,7 +111,7 @@ img.onload = function(){
      .attr('opacity', 1);
  
     if (unit > minDiam) {
-      c.attr('onmouseover', 'split(' + params.join(',') + ')');
+      c.attr('data-params', params.join(','));
     }
   }
   
