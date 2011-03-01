@@ -76,7 +76,7 @@ COG.extend = function() {
                 return callbackId;
             }; // bind
 
-            target.trigger = function(eventName) {
+            target.triggerCustom = function(eventName, args) {
                 var eventCallbacks = getHandlersForName(target, eventName),
                     evt = {
                         cancel: false,
@@ -84,11 +84,15 @@ COG.extend = function() {
                     },
                     eventArgs;
 
+                if (args) {
+                    COG.extend(evt, args);
+                } // if
+
                 if (! eventCallbacks) {
                     return null;
                 } // if
 
-                eventArgs = Array.prototype.slice.call(arguments, 1);
+                eventArgs = Array.prototype.slice.call(arguments, 2);
 
                 if (target.eventInterceptor) {
                     target.eventInterceptor(eventName, evt, eventArgs);
@@ -97,11 +101,17 @@ COG.extend = function() {
                 eventArgs.unshift(evt);
 
                 for (var ii = eventCallbacks.length; ii-- && (! evt.cancel); ) {
-                    eventCallbacks[ii].fn.apply(self, eventArgs);
+                    eventCallbacks[ii].fn.apply(this, eventArgs);
                 } // for
 
-
                 return evt;
+            };
+
+            target.trigger = function(eventName) {
+                var eventArgs = Array.prototype.slice.call(arguments, 1);
+                eventArgs.splice(0, 0, eventName, null);
+
+                return target.triggerCustom.apply(this, eventArgs);
             }; // trigger
 
             target.unbind = function(eventName, callbackId) {
@@ -970,6 +980,13 @@ function getOffset(obj) {
     };
 } // getOffset
 
+function genEventProps(source, evt) {
+    return {
+        source: source,
+        target: evt.target ? evt.target : evt.srcElement
+    };
+} // genEventProps
+
 function matchTarget(evt, targetElement) {
     var targ = evt.target ? evt.target : evt.srcElement;
     while (targ && (targ !== targetElement) && targ.nodeName && (targ.nodeName.toUpperCase() != 'CANVAS')) {
@@ -1020,8 +1037,9 @@ var MouseHandler = function(targetElement, observable, opts) {
                 evt.pageX ? evt.pageX : evt.screenX,
                 evt.pageY ? evt.pageY : evt.screenY);
 
-            observable.trigger(
+            observable.triggerCustom(
                 'tap',
+                genEventProps('mouse', evt),
                 clickXY,
                 pointerOffset(clickXY, getOffset(targetElement))
             );
@@ -1038,8 +1056,9 @@ var MouseHandler = function(targetElement, observable, opts) {
 
             COG.info('captured double click + target matched');
 
-            observable.trigger(
+            observable.triggerCustom(
                 'doubleTap',
+                genEventProps('mouse', evt),
                 clickXY,
                 pointerOffset(clickXY, getOffset(targetElement))
             );
@@ -1059,8 +1078,9 @@ var MouseHandler = function(targetElement, observable, opts) {
                 start = point(lastX, lastY);
                 offset = getOffset(targetElement);
 
-                observable.trigger(
+                observable.triggerCustom(
                     'pointerDown',
+                    genEventProps('mouse', evt),
                     start,
                     pointerOffset(start, offset)
                 );
@@ -1073,7 +1093,7 @@ var MouseHandler = function(targetElement, observable, opts) {
         currentY = evt.pageY ? evt.pageY : evt.screenY;
 
         if (matchTarget(evt, targetElement)) {
-            triggerCurrent(buttonDown ? 'pointerMove' : 'pointerHover');
+            triggerCurrent(evt, buttonDown ? 'pointerMove' : 'pointerHover');
         } // if
     } // mouseMove
 
@@ -1083,7 +1103,7 @@ var MouseHandler = function(targetElement, observable, opts) {
 
             if (matchTarget(evt, targetElement)) {
                 targetElement.style.cursor = 'default';
-                triggerCurrent('pointerUp');
+                triggerCurrent(evt, 'pointerUp');
             } // if
         } // if
     } // mouseUp
@@ -1107,8 +1127,9 @@ var MouseHandler = function(targetElement, observable, opts) {
             if (deltaY !== 0) {
                 var current = point(currentX, currentY);
 
-                observable.trigger(
+                observable.triggerCustom(
                     'zoom',
+                    genEventProps('mouse', evt),
                     current,
                     pointerOffset(current, getOffset(targetElement)),
                     deltaY / WHEEL_DELTA_LEVEL,
@@ -1127,15 +1148,16 @@ var MouseHandler = function(targetElement, observable, opts) {
         return button == 1;
     } // leftPressed
 
-    function triggerCurrent(eventName, overrideX, overrideY, updateLast) {
+    function triggerCurrent(evt, eventName, overrideX, overrideY, updateLast) {
         var evtX = typeof overrideX != 'undefined' ? overrideX : currentX,
             evtY = typeof overrideY != 'undefined' ? overrideY : currentY,
             deltaX = evtX - lastX,
             deltaY = evtY - lastY,
             current = point(evtX, evtY);
 
-        observable.trigger(
+        observable.triggerCustom(
             eventName,
+            genEventProps('mouse', evt),
             current,
             pointerOffset(current, offset),
             point(deltaX, deltaY)
@@ -1308,15 +1330,17 @@ var TouchHandler = function(targetElement, observable, opts) {
             if (! touchesStart) {
                 touchMode = TOUCH_MODE_TAP;
 
-                observable.trigger(
+                observable.triggerCustom(
                     'pointerDown',
+                    genEventProps('touch', evt),
                     changedTouches,
                     relTouches);
             } // if
 
             if (detailedEvents) {
-                observable.trigger(
+                observable.triggerCustom(
                     'pointerDownMulti',
+                    genEventProps('touch', evt),
                     changedTouches,
                     relTouches);
             } // if
@@ -1367,8 +1391,9 @@ var TouchHandler = function(targetElement, observable, opts) {
                                 currentScaling = touchDistance / startDistance,
                                 scaleChange = currentScaling - scaling;
 
-                            observable.trigger(
+                            observable.triggerCustom(
                                 'zoom',
+                                genEventProps('touch', evt),
                                 current,
                                 pointerOffset(current, offset),
                                 scaleChange,
@@ -1381,8 +1406,9 @@ var TouchHandler = function(targetElement, observable, opts) {
                 } // if
 
                 if (touchMode == TOUCH_MODE_MOVE) {
-                    observable.trigger(
+                    observable.triggerCustom(
                         'pointerMove',
+                        genEventProps('touch', evt),
                         touchesCurrent,
                         copyTouches(touchesCurrent, offset.x, offset.y),
                         point(
@@ -1392,8 +1418,9 @@ var TouchHandler = function(targetElement, observable, opts) {
                 } // if
 
                 if (detailedEvents) {
-                    observable.trigger(
+                    observable.triggerCustom(
                         'pointerMoveMulti',
+                        genEventProps('touch', evt),
                         touchesCurrent,
                         copyTouches(touchesCurrent, offset.x, offset.y)
                     );
@@ -1413,15 +1440,17 @@ var TouchHandler = function(targetElement, observable, opts) {
 
             if (! touchesCurrent) {
                 if (touchMode === TOUCH_MODE_TAP) {
-                    observable.trigger(
-                        'pointerTap',
+                    observable.triggerCustom(
+                        'tap',
+                        genEventProps('touch', evt),
                         changedTouches,
                         offsetTouches
                     );
                 } // if
 
-                observable.trigger(
+                observable.triggerCustom(
                     'pointerUp',
+                    genEventProps('touch', evt),
                     changedTouches,
                     offsetTouches
                 );
@@ -1430,8 +1459,9 @@ var TouchHandler = function(targetElement, observable, opts) {
             } // if
 
             if (detailedEvents) {
-                observable.trigger(
+                observable.triggerCustom(
                     'pointerUpMulti',
+                    genEventProps('touch', evt),
                     changedTouches,
                     offsetTouches
                 );

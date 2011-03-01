@@ -141,16 +141,18 @@ var TouchHandler = function(targetElement, observable, opts) {
                 touchMode = TOUCH_MODE_TAP;
 
                 // trigger the pointer down event
-                observable.trigger(
+                observable.triggerCustom(
                     'pointerDown', 
+                    genEventProps('touch', evt),
                     changedTouches, 
                     relTouches);
             } // if
             
             // if we are providing detailed events, then trigger the pointer down multi
             if (detailedEvents) {
-                observable.trigger(
+                observable.triggerCustom(
                     'pointerDownMulti',
+                    genEventProps('touch', evt),
                     changedTouches,
                     relTouches);
             } // if
@@ -217,8 +219,9 @@ var TouchHandler = function(targetElement, observable, opts) {
                                 scaleChange = currentScaling - scaling;
                                 
                             // trigger the zoom event
-                            observable.trigger(
+                            observable.triggerCustom(
                                 'zoom', 
+                                genEventProps('touch', evt),
                                 current, 
                                 pointerOffset(current, offset),
                                 scaleChange,
@@ -234,8 +237,9 @@ var TouchHandler = function(targetElement, observable, opts) {
                 // if the touch mode is move, then trigger a pointer move on the first touch
                 if (touchMode == TOUCH_MODE_MOVE) {
                     // trigger the pointer move event
-                    observable.trigger(
+                    observable.triggerCustom(
                         'pointerMove',
+                        genEventProps('touch', evt),
                         touchesCurrent,
                         copyTouches(touchesCurrent, offset.x, offset.y),
                         point(
@@ -246,8 +250,9 @@ var TouchHandler = function(targetElement, observable, opts) {
                 
                 // fire a touch multi event for custom event handling
                 if (detailedEvents) {
-                    observable.trigger(
+                    observable.triggerCustom(
                         'pointerMoveMulti', 
+                        genEventProps('touch', evt),
                         touchesCurrent, 
                         copyTouches(touchesCurrent, offset.x, offset.y)
                     );
@@ -270,16 +275,18 @@ var TouchHandler = function(targetElement, observable, opts) {
             if (! touchesCurrent) {
                 if (touchMode === TOUCH_MODE_TAP) {
                     // trigger the pointer move event
-                    observable.trigger(
-                        'pointerTap',
+                    observable.triggerCustom(
+                        'tap',
+                        genEventProps('touch', evt),
                         changedTouches,
                         offsetTouches
                     );
                 } // if
                 
                 // trigger the pointer up
-                observable.trigger(
+                observable.triggerCustom(
                     'pointerUp',
+                    genEventProps('touch', evt),
                     changedTouches,
                     offsetTouches
                 );
@@ -290,8 +297,9 @@ var TouchHandler = function(targetElement, observable, opts) {
             // if we are monitoring detailed events, then trigger up multi
             if (detailedEvents) {
                 // trigger the pointer up
-                observable.trigger(
+                observable.triggerCustom(
                     'pointerUpMulti',
+                    genEventProps('touch', evt),
                     changedTouches,
                     offsetTouches
                 );

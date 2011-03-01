@@ -25,8 +25,9 @@ var MouseHandler = function(targetElement, observable, opts) {
                 evt.pageX ? evt.pageX : evt.screenX,
                 evt.pageY ? evt.pageY : evt.screenY);
             
-            observable.trigger(
-                'tap', 
+            observable.triggerCustom(
+                'tap',
+                genEventProps('mouse', evt),
                 clickXY, 
                 pointerOffset(clickXY, getOffset(targetElement))
             );
@@ -43,8 +44,9 @@ var MouseHandler = function(targetElement, observable, opts) {
                 
             COG.info('captured double click + target matched');
             
-            observable.trigger(
+            observable.triggerCustom(
                 'doubleTap', 
+                genEventProps('mouse', evt),
                 clickXY, 
                 pointerOffset(clickXY, getOffset(targetElement))
             );
@@ -66,8 +68,9 @@ var MouseHandler = function(targetElement, observable, opts) {
                 offset = getOffset(targetElement);
                 
                 // trigger the pointer down event
-                observable.trigger(
+                observable.triggerCustom(
                     'pointerDown', 
+                    genEventProps('mouse', evt),
                     start, 
                     pointerOffset(start, offset)
                 );
@@ -81,7 +84,7 @@ var MouseHandler = function(targetElement, observable, opts) {
         currentY = evt.pageY ? evt.pageY : evt.screenY;
         
         if (matchTarget(evt, targetElement)) {
-            triggerCurrent(buttonDown ? 'pointerMove' : 'pointerHover');
+            triggerCurrent(evt, buttonDown ? 'pointerMove' : 'pointerHover');
         } // if
     } // mouseMove
 
@@ -92,7 +95,7 @@ var MouseHandler = function(targetElement, observable, opts) {
             // if the button was released on this element, then trigger the event
             if (matchTarget(evt, targetElement)) {
                 targetElement.style.cursor = 'default';
-                triggerCurrent('pointerUp');
+                triggerCurrent(evt, 'pointerUp');
             } // if
         } // if
     } // mouseUp
@@ -117,8 +120,9 @@ var MouseHandler = function(targetElement, observable, opts) {
             if (deltaY !== 0) {
                 var current = point(currentX, currentY);
                 
-                observable.trigger(
+                observable.triggerCustom(
                     'zoom', 
+                    genEventProps('mouse', evt),
                     current, 
                     pointerOffset(current, getOffset(targetElement)),
                     deltaY / WHEEL_DELTA_LEVEL,
@@ -137,7 +141,7 @@ var MouseHandler = function(targetElement, observable, opts) {
         return button == 1;
     } // leftPressed
     
-    function triggerCurrent(eventName, overrideX, overrideY, updateLast) {
+    function triggerCurrent(evt, eventName, overrideX, overrideY, updateLast) {
         var evtX = typeof overrideX != 'undefined' ? overrideX : currentX,
             evtY = typeof overrideY != 'undefined' ? overrideY : currentY,
             deltaX = evtX - lastX,
@@ -145,8 +149,9 @@ var MouseHandler = function(targetElement, observable, opts) {
             current = point(evtX, evtY);
             
         // trigger the event
-        observable.trigger(
-            eventName,
+        observable.triggerCustom(
+            eventName, 
+            genEventProps('mouse', evt),
             current,
             pointerOffset(current, offset),
             point(deltaX, deltaY)
