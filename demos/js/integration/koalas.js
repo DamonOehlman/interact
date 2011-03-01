@@ -25,7 +25,7 @@ img.onload = function(){
   
   var dim  = size / minDiam;
   
-  var context = document.getElementById('canvas').getContext('2d');
+  var context = document.getElementById('demoCanvas').getContext('2d');
   context.drawImage(img, 0, 0, dim, dim);
   data = context.getImageData(0, 0, dim, dim).data;
   console.log(data.length);
