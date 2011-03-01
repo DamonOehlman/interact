@@ -1,4 +1,5 @@
 //= require <cog/src/observable>
+//= require <cog/src/tween>
 //= require <cog/src/log>
 
 /**
@@ -110,6 +111,8 @@ INTERACT = (function() {
         // return the event monitor
         return new EventMonitor(target, getHandlers(opts.types, capabilities), opts);
     } // watch
+    
+    //= require "utils/inertia"
     
     //= require "interactors/pointer"
     //= require "interactors/mouse"

@@ -1,6 +1,5 @@
 var MouseHandler = function(targetElement, observable, opts) {
     opts = COG.extend({
-        inertia: false
     }, opts);
     
     // initialise constants
@@ -55,6 +54,7 @@ var MouseHandler = function(targetElement, observable, opts) {
     function handleMouseDown(evt) {
         if (matchTarget(evt, targetElement)) {
             buttonDown = isLeftButton(evt);
+            
             if (buttonDown) {
                 // update the cursor and prevent the default
                 targetElement.style.cursor = 'move';
@@ -65,22 +65,23 @@ var MouseHandler = function(targetElement, observable, opts) {
                 start = point(lastX, lastY);
                 offset = getOffset(targetElement);
                 
+                // trigger the pointer down event
                 observable.trigger(
                     'pointerDown', 
                     start, 
                     pointerOffset(start, offset)
                 );
-            } // if
+            }
         } // if
     } // mouseDown
-
+    
     function handleMouseMove(evt) {
         // capture the current x and current y
         currentX = evt.pageX ? evt.pageX : evt.screenX;
         currentY = evt.pageY ? evt.pageY : evt.screenY;
         
-        if (buttonDown && matchTarget(evt, targetElement)) {
-            triggerCurrent('pointerMove');
+        if (matchTarget(evt, targetElement)) {
+            triggerCurrent(buttonDown ? 'pointerMove' : 'pointerHover');
         } // if
     } // mouseMove
 
@@ -93,8 +94,6 @@ var MouseHandler = function(targetElement, observable, opts) {
                 targetElement.style.cursor = 'default';
                 triggerCurrent('pointerUp');
             } // if
-            
-            // TODO: check for inertia
         } // if
     } // mouseUp
     
@@ -138,18 +137,26 @@ var MouseHandler = function(targetElement, observable, opts) {
         return button == 1;
     } // leftPressed
     
-    function triggerCurrent(eventName, includeTotal) {
-        var current = point(currentX, currentY);
+    function triggerCurrent(eventName, overrideX, overrideY, updateLast) {
+        var evtX = typeof overrideX != 'undefined' ? overrideX : currentX,
+            evtY = typeof overrideY != 'undefined' ? overrideY : currentY,
+            deltaX = evtX - lastX,
+            deltaY = evtY - lastY,
+            current = point(evtX, evtY);
             
+        // trigger the event
         observable.trigger(
             eventName,
             current,
             pointerOffset(current, offset),
-            point(currentX - lastX, currentY - lastY)
+            point(deltaX, deltaY)
         );
         
-        lastX = currentX;
-        lastY = currentY;
+        // if we should update the last x and y, then do that now
+        if (typeof updateLast == 'undefined' || updateLast) {
+            lastX = evtX;
+            lastY = evtY;
+        } // if
     } // triggerCurrent
 
     /* exports */
@@ -169,7 +176,7 @@ var MouseHandler = function(targetElement, observable, opts) {
     opts.binder('mousedown', handleMouseDown, false);
     opts.binder('mousemove', handleMouseMove, false);
     opts.binder('mouseup', handleMouseUp, false);
-    opts.binder('click', handleClick, false);
+    // opts.binder('click', handleClick, false);
     opts.binder('dblclick', handleDoubleClick, false);
     
     // bind mouse wheel events
