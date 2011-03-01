@@ -80,8 +80,7 @@ COG.extend = function() {
                 var eventCallbacks = getHandlersForName(target, eventName),
                     evt = {
                         cancel: false,
-                        name: eventName,
-                        tickCount: new Date().getTime()
+                        name: eventName
                     },
                     eventArgs;
 
@@ -125,6 +124,519 @@ COG.extend = function() {
 
         return target;
     };
+})();
+
+var FNS_TIME = [
+        'webkitAnimationTime',
+        'mozAnimationTime',
+        'animationTime',
+        'webkitAnimationStartTime',
+        'mozAnimationStartTime',
+        'animationStartTime'
+    ],
+    FNS_FRAME = [
+        'webkitRequestAnimationFrame',
+        'mozRequestAnimationFrame',
+        'requestAnimationFrame'
+    ];
+
+var animTime = function() {
+    return new Date().getTime();
+};
+
+var animFrame = function(callback) {
+    setTimeout(function() {
+        callback(animTime());
+    }, 1000 / 60);
+};
+
+FNS_TIME.forEach(function(fn) {
+    if (fn in window) {
+        animTime = function() {
+            return window[fn];
+        };
+    } // if
+});
+
+FNS_FRAME.forEach(function(fn) {
+    if (fn in window) {
+        animFrame = function(callback) {
+            window[fn](callback);
+        };
+    } // if
+});
+
+COG.animTime = animTime;
+COG.animFrame = animFrame;
+
+/**
+# COG.Loopage
+This module implements a control loop that can be used to centralize
+jobs draw loops, animation calculations, partial calculations for COG.Job
+instances, etc.
+*/
+COG.Loopage = (function() {
+    var frameId = 0,
+        workerCount = 0,
+        workers = [],
+        removalQueue = [];
+
+    function LoopWorker(params) {
+        var self = COG.extend({
+            id: workerCount++,
+            frequency: 0,
+            after: 0,
+            single: false,
+            lastTick: 0,
+            execute: function() {}
+        }, params);
+
+        return self;
+    } // LoopWorker
+
+
+    /* internal functions */
+
+    function joinLoop(params) {
+        var worker = new LoopWorker(params);
+        if (worker.after > 0) {
+            worker.lastTick = new Date().getTime() + worker.after;
+        } // if
+
+        COG.observable(worker);
+        worker.bind('complete', function() {
+            leaveLoop(worker.id);
+        });
+
+        workers.unshift(worker);
+        reschedule();
+
+        return worker;
+    } // joinLoop
+
+    function leaveLoop(workerId) {
+        removalQueue.push(workerId);
+        reschedule();
+    } // leaveLoop
+
+    function reschedule() {
+        if (! frameId) {
+            frameId = animFrame(runLoop);
+        } // if
+
+        recalcSleepFrequency = true;
+    } // reschedule
+
+    function runLoop() {
+        var ii,
+            tickCount = animTime(),
+            workerCount = workers.length;
+
+        while (removalQueue.length > 0) {
+            var workerId = removalQueue.shift();
+
+            for (ii = workerCount; ii--; ) {
+                if (workers[ii].id === workerId) {
+                    workers.splice(ii, 1);
+                    break;
+                } // if
+            } // for
+
+            workerCount = workers.length;
+        } // while
+
+        for (ii = workerCount; ii--; ) {
+            var workerDiff = tickCount - workers[ii].lastTick;
+
+            if (workers[ii].lastTick === 0 || workerDiff >= workers[ii].frequency) {
+                workers[ii].execute(tickCount, workers[ii]);
+                workers[ii].lastTick = tickCount;
+
+                if (workers[ii].single) {
+                    workers[ii].trigger('complete');
+                } // if
+            } // if
+        } // for
+
+        frameId = workerCount ? animFrame(runLoop) : 0;
+    } // runLoop
+
+    return {
+        join: joinLoop,
+        leave: leaveLoop
+    };
+})();
+
+(function() {
+    var BACK_S = 1.70158,
+        HALF_PI = Math.PI / 2,
+
+        abs = Math.abs,
+        pow = Math.pow,
+        sin = Math.sin,
+        asin = Math.asin,
+        cos = Math.cos,
+
+        tweens = [],
+        tweenWorker = null,
+        updatingTweens = false;
+
+    /*
+    Easing functions
+
+    sourced from Robert Penner's excellent work:
+    http://www.robertpenner.com/easing/
+
+    Functions follow the function format of fn(t, b, c, d, s) where:
+    - t = time
+    - b = beginning position
+    - c = change
+    - d = duration
+    */
+    var easingFns = {
+        linear: function(t, b, c, d) {
+            return c*t/d + b;
+        },
+
+        /* back easing functions */
+
+        backin: function(t, b, c, d) {
+            return c*(t/=d)*t*((BACK_S+1)*t - BACK_S) + b;
+        },
+
+        backout: function(t, b, c, d) {
+            return c*((t=t/d-1)*t*((BACK_S+1)*t + BACK_S) + 1) + b;
+        },
+
+        backinout: function(t, b, c, d) {
+            return ((t/=d/2)<1) ? c/2*(t*t*(((BACK_S*=(1.525))+1)*t-BACK_S))+b : c/2*((t-=2)*t*(((BACK_S*=(1.525))+1)*t+BACK_S)+2)+b;
+        },
+
+        /* bounce easing functions */
+
+        bouncein: function(t, b, c, d) {
+            return c - easingFns.bounceout(d-t, 0, c, d) + b;
+        },
+
+        bounceout: function(t, b, c, d) {
+            if ((t/=d) < (1/2.75)) {
+                return c*(7.5625*t*t) + b;
+            } else if (t < (2/2.75)) {
+                return c*(7.5625*(t-=(1.5/2.75))*t + 0.75) + b;
+            } else if (t < (2.5/2.75)) {
+                return c*(7.5625*(t-=(2.25/2.75))*t + 0.9375) + b;
+            } else {
+                return c*(7.5625*(t-=(2.625/2.75))*t + 0.984375) + b;
+            }
+        },
+
+        bounceinout: function(t, b, c, d) {
+            if (t < d/2) return easingFns.bouncein(t*2, 0, c, d) / 2 + b;
+            else return easingFns.bounceout(t*2-d, 0, c, d) / 2 + c/2 + b;
+        },
+
+        /* cubic easing functions */
+
+        cubicin: function(t, b, c, d) {
+            return c*(t/=d)*t*t + b;
+        },
+
+        cubicout: function(t, b, c, d) {
+            return c*((t=t/d-1)*t*t + 1) + b;
+        },
+
+        cubicinout: function(t, b, c, d) {
+            if ((t/=d/2) < 1) return c/2*t*t*t + b;
+            return c/2*((t-=2)*t*t + 2) + b;
+        },
+
+        /* elastic easing functions */
+
+        elasticin: function(t, b, c, d, a, p) {
+            var s;
+
+            if (t==0) return b;  if ((t/=d)==1) return b+c;  if (!p) p=d*0.3;
+            if (!a || a < abs(c)) { a=c; s=p/4; }
+            else s = p/TWO_PI * asin (c/a);
+            return -(a*pow(2,10*(t-=1)) * sin( (t*d-s)*TWO_PI/p )) + b;
+        },
+
+        elasticout: function(t, b, c, d, a, p) {
+            var s;
+
+            if (t==0) return b;  if ((t/=d)==1) return b+c;  if (!p) p=d*0.3;
+            if (!a || a < abs(c)) { a=c; s=p/4; }
+            else s = p/TWO_PI * asin (c/a);
+            return (a*pow(2,-10*t) * sin( (t*d-s)*TWO_PI/p ) + c + b);
+        },
+
+        elasticinout: function(t, b, c, d, a, p) {
+            var s;
+
+            if (t==0) return b;  if ((t/=d/2)==2) return b+c;  if (!p) p=d*(0.3*1.5);
+            if (!a || a < abs(c)) { a=c; s=p/4; }
+            else s = p/TWO_PI * asin (c/a);
+            if (t < 1) return -0.5*(a*pow(2,10*(t-=1)) * sin( (t*d-s)*TWO_PI/p )) + b;
+            return a*pow(2,-10*(t-=1)) * sin( (t*d-s)*TWO_PI/p )*0.5 + c + b;
+        },
+
+        /* quad easing */
+
+        quadin: function(t, b, c, d) {
+            return c*(t/=d)*t + b;
+        },
+
+        quadout: function(t, b, c, d) {
+            return -c *(t/=d)*(t-2) + b;
+        },
+
+        quadinout: function(t, b, c, d) {
+            if ((t/=d/2) < 1) return c/2*t*t + b;
+            return -c/2 * ((--t)*(t-2) - 1) + b;
+        },
+
+        /* sine easing */
+
+        sinein: function(t, b, c, d) {
+            return -c * cos(t/d * HALF_PI) + c + b;
+        },
+
+        sineout: function(t, b, c, d) {
+            return c * sin(t/d * HALF_PI) + b;
+        },
+
+        sineinout: function(t, b, c, d) {
+            return -c/2 * (cos(Math.PI*t/d) - 1) + b;
+        }
+    };
+
+    /* define the Tween class */
+
+    /**
+    # COG.Tween
+    */
+    var Tween = COG.Tween = function(params) {
+        params = COG.extend({
+            target: null,
+            property: null,
+            startValue: 0,
+            endValue: null,
+            duration: 2000,
+            tweenFn: easing('sine.out'),
+            complete: null
+        }, params);
+
+        var startTicks = new Date().getTime(),
+            updateListeners = [],
+            complete = false,
+            beginningValue = 0.0,
+            change = 0;
+
+        function notifyListeners(updatedValue, complete) {
+            for (var ii = updateListeners.length; ii--; ) {
+                updateListeners[ii](updatedValue, complete);
+            } // for
+        } // notifyListeners
+
+        var self = {
+            isComplete: function() {
+                return complete;
+            },
+
+            triggerComplete: function(cancelled) {
+                if (params.complete) {
+                    params.complete(cancelled);
+                } // if
+            },
+
+            update: function(tickCount) {
+                var elapsed = tickCount - startTicks,
+                    updatedValue = params.tweenFn(
+                                        elapsed,
+                                        beginningValue,
+                                        change,
+                                        params.duration);
+
+                if (params.target) {
+                    params.target[params.property] = updatedValue;
+                } // if
+
+                notifyListeners(updatedValue);
+
+                complete = startTicks + params.duration <= tickCount;
+                if (complete) {
+                    if (params.target) {
+                        params.target[params.property] = params.tweenFn(params.duration, beginningValue, change, params.duration);
+                    } // if
+
+                    notifyListeners(updatedValue, true);
+                } // if
+            },
+
+            requestUpdates: function(callback) {
+                updateListeners.push(callback);
+            }
+        };
+
+        beginningValue =
+            (params.target && params.property && params.target[params.property]) ? params.target[params.property] : params.startValue;
+
+        if (typeof params.endValue !== 'undefined') {
+            change = (params.endValue - beginningValue);
+        } // if
+
+        if (change == 0) {
+            complete = true;
+        } // if..else
+
+        wakeTweens();
+
+        return self;
+    };
+
+    /* animation internals */
+
+    function simpleTypeName(typeName) {
+        return typeName.replace(/[\-\_\s\.]/g, '').toLowerCase();
+    } // simpleTypeName
+
+    function updateTweens(tickCount, worker) {
+        if (updatingTweens) { return tweens.length; }
+
+        updatingTweens = true;
+        try {
+            var ii = 0;
+            while (ii < tweens.length) {
+                if (tweens[ii].isComplete()) {
+                    tweens[ii].triggerComplete(false);
+                    tweens.splice(ii, 1);
+                }
+                else {
+                    tweens[ii].update(tickCount);
+                    ii++;
+                } // if..else
+            } // while
+        }
+        finally {
+            updatingTweens = false;
+        } // try..finally
+
+        if (tweens.length === 0) {
+            tweenWorker.trigger('complete');
+        } // if
+
+        return tweens.length;
+    } // update
+
+    function wakeTweens() {
+        if (tweenWorker) { return; }
+
+        tweenWorker = COG.Loopage.join({
+            execute: updateTweens,
+            frequency: 20
+        });
+
+        tweenWorker.bind('complete', function(evt) {
+            tweenWorker = null;
+        });
+    } // wakeTweens
+
+    /* tween exports */
+
+    /**
+    # COG.tweenValue
+    */
+    COG.tweenValue = function(startValue, endValue, fn, duration, callback) {
+
+        var startTicks = animTime(),
+            change = endValue - startValue,
+            tween = {};
+
+        function runTween(tickCount) {
+            var elapsed = tickCount - startTicks,
+                updatedValue = fn(elapsed, startValue, change, duration),
+                complete = startTicks + duration <= tickCount,
+                cont = !complete,
+                retVal;
+
+            if (callback) {
+                retVal = callback(updatedValue, complete, elapsed);
+
+                cont = typeof retVal != 'undefined' ? retVal && cont : cont;
+            } // if
+
+            if (cont) {
+                animFrame(runTween);
+            } // if
+        } // runTween
+
+        animFrame(runTween);
+
+        return tween;
+    }; // T5.tweenValue
+
+    /*
+    # T5.tween
+    */
+    COG.tween = function(target, property, targetValue, fn, callback, duration) {
+        var fnresult = new Tween({
+            target: target,
+            property: property,
+            endValue: targetValue,
+            tweenFn: fn,
+            duration: duration,
+            complete: callback
+        });
+
+        tweens.push(fnresult);
+        return fnresult;
+    }; // T5.tween
+
+    /**
+    # COG.endTweens
+    */
+    COG.endTweens = function(checkCallback) {
+        if (updatingTweens) { return ; }
+
+        updatingTweens = true;
+        try {
+            var ii = 0;
+
+            while (ii < tweens.length) {
+                if ((! checkCallback) || checkCallback(tweens[ii])) {
+                    tweens[ii].triggerComplete(true);
+                    tweens.splice(ii, 1);
+                }
+                else {
+                    ii++;
+                } // if..else
+            } // for
+        }
+        finally {
+            updatingTweens = false;
+        } // try..finally
+    };
+
+    /**
+    # COG.getTweens
+    */
+    COG.getTweens = function() {
+        return [].concat(tweens);
+    };
+
+    /**
+    # COG.easing
+    */
+    var easing = COG.easing = function(typeName) {
+        return easingFns[simpleTypeName(typeName)];
+    }; // easing
+
+    /**
+    # COG.registerEasingType
+    */
+    COG.registerEasingType = function(typeName, callback) {
+        easingFns[simpleTypeName(typeName)] = callback;
+    }; // registerEasingType
 })();
 
 (function() {
@@ -195,15 +707,50 @@ var EventMonitor = function(target, handlers, params) {
         observable: null
     }, params);
 
+    var MAXMOVE_TAP = 20;
+
     var observable = params.observable,
-        handlerInstances = [];
+        pannableOpts = null,
+        handlerInstances = [],
+        pans = [],
+        totalDeltaX,
+        totalDeltaY;
 
 
     /* internals */
 
-    function handlePanMove(evt, absXY, relXY, deltaXY) {
-        observable.trigger('pan', deltaXY.x, deltaXY.y);
+    function deltaGreaterThan(value) {
+        return Math.abs(totalDeltaX) > value || Math.abs(totalDeltaY) > value;
+    } // deltaGreaterThan
+
+    function handlePointerMove(evt, absXY, relXY, deltaXY) {
+        if (pannableOpts) {
+            pans[pans.length] = {
+                ticks: new Date().getTime(),
+                x: deltaXY.x,
+                y: deltaXY.y
+            };
+
+            observable.trigger('pan', deltaXY.x, deltaXY.y);
+        } // if
+
+        totalDeltaX += deltaXY.x ? deltaXY.x : 0;
+        totalDeltaY += deltaXY.y ? deltaXY.y : 0;
     } // handlePanMove
+
+    function handlePointerDown(evt, absXY, relXY) {
+        COG.info('reset ' + pans.length + ' pan history');
+        pans = [];
+
+        totalDeltaX = 0;
+        totalDeltaY = 0;
+    } // handlePointerDown
+
+    function handlePointerUp(evt, absXY, relXY) {
+        if (! deltaGreaterThan(MAXMOVE_TAP)) {
+            observable.trigger('tap', absXY, relXY);
+        } // if
+    } // handlePointerUP
 
     /* exports */
 
@@ -212,11 +759,9 @@ var EventMonitor = function(target, handlers, params) {
     } // bind
 
     function pannable(opts) {
-        opts = COG.extend({
+        pannableOpts = COG.extend({
             inertia: true
         }, opts);
-
-        observable.bind('pointerMove', handlePanMove);
 
         return self;
     } // pannable
@@ -242,6 +787,10 @@ var EventMonitor = function(target, handlers, params) {
     for (var ii = 0; ii < handlers.length; ii++) {
         handlerInstances.push(handlers[ii](target, observable, params));
     } // for
+
+    observable.bind('pointerDown', handlePointerDown);
+    observable.bind('pointerMove', handlePointerMove);
+    observable.bind('pointerUp', handlePointerUp);
 
     return self;
 };
@@ -340,6 +889,66 @@ var EventMonitor = function(target, handlers, params) {
         return new EventMonitor(target, getHandlers(opts.types, capabilities), opts);
     } // watch
 
+var InertiaMonitor = function(upX, upY, params) {
+    params = COG.extend({
+        inertiaTrigger: 20
+    }, params);
+
+    var INERTIA_TIMEOUT = 300,
+        INERTIA_DURATION = 300,
+        INERTIA_MAXDIST = 500;
+
+    var startTicks = new Date().getTime(),
+        worker;
+
+    /* internals */
+
+    function calcDistance(x1, y1, x2, y2) {
+        var distX = x1 - x2,
+            distY = y1 - y2;
+
+        return Math.sqrt(distX * distX + distY * distY);
+    } // calcDistance
+
+    function calculateInertia(currentX, currentY, distance, tickDiff) {
+        var theta = Math.asin((upY - currentY) / distance),
+            extraDistance = distance * (INERTIA_DURATION / tickDiff) >> 0;
+
+        extraDistance = extraDistance > INERTIA_MAXDIST ? INERTIA_MAXDIST : extraDistance;
+
+        theta = currentX > upX ? theta : Math.PI - theta;
+
+        self.trigger(
+            'inertia',
+            upX,
+            upY,
+            Math.cos(theta) * extraDistance | 0,
+            Math.sin(theta) * -extraDistance | 0);
+    } // calculateInertia
+
+    /* exports */
+
+    function check(currentX, currentY) {
+        var distance = calcDistance(upX, upY, currentX, currentY),
+            tickDiff = new Date().getTime() - startTicks;
+
+        if ((tickDiff < INERTIA_TIMEOUT) && (distance > params.inertiaTrigger)) {
+            calculateInertia(currentX, currentY, distance, tickDiff);
+        }
+        else if (tickDiff > INERTIA_TIMEOUT) {
+            self.trigger('timeout');
+        } // if..else
+    } // check
+
+    var self = {
+        check: check
+    };
+
+    COG.observable(self);
+
+    return self;
+};
+
 /* common pointer (mouse, touch, etc) functions */
 
 function getOffset(obj) {
@@ -388,7 +997,6 @@ function preventDefault(evt) {
 } // preventDefault
 var MouseHandler = function(targetElement, observable, opts) {
     opts = COG.extend({
-        inertia: false
     }, opts);
 
     var WHEEL_DELTA_STEP = 120,
@@ -441,6 +1049,7 @@ var MouseHandler = function(targetElement, observable, opts) {
     function handleMouseDown(evt) {
         if (matchTarget(evt, targetElement)) {
             buttonDown = isLeftButton(evt);
+
             if (buttonDown) {
                 targetElement.style.cursor = 'move';
                 preventDefault(evt);
@@ -455,7 +1064,7 @@ var MouseHandler = function(targetElement, observable, opts) {
                     start,
                     pointerOffset(start, offset)
                 );
-            } // if
+            }
         } // if
     } // mouseDown
 
@@ -463,8 +1072,8 @@ var MouseHandler = function(targetElement, observable, opts) {
         currentX = evt.pageX ? evt.pageX : evt.screenX;
         currentY = evt.pageY ? evt.pageY : evt.screenY;
 
-        if (buttonDown && matchTarget(evt, targetElement)) {
-            triggerCurrent('pointerMove');
+        if (matchTarget(evt, targetElement)) {
+            triggerCurrent(buttonDown ? 'pointerMove' : 'pointerHover');
         } // if
     } // mouseMove
 
@@ -476,7 +1085,6 @@ var MouseHandler = function(targetElement, observable, opts) {
                 targetElement.style.cursor = 'default';
                 triggerCurrent('pointerUp');
             } // if
-
         } // if
     } // mouseUp
 
@@ -519,18 +1127,24 @@ var MouseHandler = function(targetElement, observable, opts) {
         return button == 1;
     } // leftPressed
 
-    function triggerCurrent(eventName, includeTotal) {
-        var current = point(currentX, currentY);
+    function triggerCurrent(eventName, overrideX, overrideY, updateLast) {
+        var evtX = typeof overrideX != 'undefined' ? overrideX : currentX,
+            evtY = typeof overrideY != 'undefined' ? overrideY : currentY,
+            deltaX = evtX - lastX,
+            deltaY = evtY - lastY,
+            current = point(evtX, evtY);
 
         observable.trigger(
             eventName,
             current,
             pointerOffset(current, offset),
-            point(currentX - lastX, currentY - lastY)
+            point(deltaX, deltaY)
         );
 
-        lastX = currentX;
-        lastY = currentY;
+        if (typeof updateLast == 'undefined' || updateLast) {
+            lastX = evtX;
+            lastY = evtY;
+        } // if
     } // triggerCurrent
 
     /* exports */
@@ -547,7 +1161,6 @@ var MouseHandler = function(targetElement, observable, opts) {
     opts.binder('mousedown', handleMouseDown, false);
     opts.binder('mousemove', handleMouseMove, false);
     opts.binder('mouseup', handleMouseUp, false);
-    opts.binder('click', handleClick, false);
     opts.binder('dblclick', handleDoubleClick, false);
 
     opts.binder('mousewheel', handleWheel, document);
