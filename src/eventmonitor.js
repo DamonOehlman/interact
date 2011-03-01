@@ -36,7 +36,7 @@ var EventMonitor = function(target, handlers, params) {
             
         // iterate back through events and check the total duration
         ii = events.length;
-        while (--ii >= 1 && totalTicks < INERTIA_TIMEOUT) {
+        while (--ii > 1 && totalTicks < INERTIA_TIMEOUT) {
             totalTicks += (events[ii].ticks - events[ii - 1].ticks);
         } // while
         

@@ -744,7 +744,7 @@ var EventMonitor = function(target, handlers, params) {
             ii;
 
         ii = events.length;
-        while (--ii >= 1 && totalTicks < INERTIA_TIMEOUT) {
+        while (--ii > 1 && totalTicks < INERTIA_TIMEOUT) {
             totalTicks += (events[ii].ticks - events[ii - 1].ticks);
         } // while
 
