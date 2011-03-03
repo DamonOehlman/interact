@@ -6,10 +6,11 @@ var EventMonitor = function(target, handlers, params) {
     }, params);
     
     // initialise constants
-    var MAXMOVE_TAP = 20,
-        INERTIA_DURATION = 500,
-        INERTIA_MAXDIST = 300,
-        INERTIA_TIMEOUT = 50;
+    var MAXMOVE_TAP = 20, // pixels
+        INERTIA_DURATION = 500, // ms
+        INERTIA_MAXDIST = 300, // pixels
+        INERTIA_TIMEOUT = 50, // ms
+        INERTIA_IDLE_DISTANCE = 15; // pixels
     
     // initialise variables
     var observable = params.observable,
@@ -28,10 +29,13 @@ var EventMonitor = function(target, handlers, params) {
             includedCount,
             vectorX = 0,
             vectorY = 0,
-            diffX,
+            diffX, 
             diffY,
-            diffTicks,
-            totalTicks = evtCount > 0 ? (new Date().getTime() - events[evtCount-1].ticks) : 0,
+            distance, 
+            theta,
+            extraDistance,
+            totalTicks = 0, // evtCount > 0 ? (new Date().getTime() - events[evtCount-1].ticks) : 0,
+            xyRatio = 1,
             ii;
             
         // iterate back through events and check the total duration
@@ -43,24 +47,31 @@ var EventMonitor = function(target, handlers, params) {
         // update the included count
         includedCount = evtCount - ii;
         // COG.info('checking for inertia, total ticks = ' + totalTicks + ', included count = ' + includedCount);
+        // console.debug(events);
         
         if (includedCount > 1) {
-            // now calculate the velocity (ii will be at the coorect index)
-            for (; ii < evtCount; ii++) {
-                diffX = events[ii].x - events[ii - 1].x;
-                diffY = events[ii].y - events[ii - 1].y;
-                diffTicks = events[ii].ticks - events[ii - 1].ticks;
+            diffX = events[evtCount - 1].x - events[ii].x;
+            diffY = events[evtCount - 1].y - events[ii].y;
+            distance = Math.sqrt(diffX * diffX + diffY * diffY) | 0;
+            
+            // if the distance is greater than the cutoff, then do the real calcs
+            if (distance > INERTIA_IDLE_DISTANCE) {
+                diffX = events[evtCount - 1].x - events[0].x;
+                diffY = events[evtCount - 1].y - events[0].y;
+                distance = Math.sqrt(diffX * diffX + diffY * diffY) | 0;
+                theta = Math.asin(diffY / distance);
 
-                vectorX += diffX / diffTicks;
-                vectorY += diffY / diffTicks;
-            } // for
+                // calculate the extra distance
+                extraDistance = distance * INERTIA_DURATION / totalTicks | 0;
+                extraDistance = extraDistance > INERTIA_MAXDIST ? INERTIA_MAXDIST : extraDistance;
 
-            // calculate the estimated pixels per millisecond of the vector, and then time by the duration
-            // TODO: make inertia configurable
-            vectorX = Math.min((vectorX / includedCount) * INERTIA_DURATION | 0, INERTIA_MAXDIST);
-            vectorY = Math.min((vectorY / includedCount) * INERTIA_DURATION | 0, INERTIA_MAXDIST);
-
-            inertiaPan(vectorX, vectorY, COG.easing('quad.out'), INERTIA_DURATION);
+                // run the inertia pan
+                inertiaPan(
+                    Math.cos(diffX > 0 ? theta : Math.PI - theta) * extraDistance, 
+                    Math.sin(theta) * extraDistance, 
+                    COG.easing('sine.out'), 
+                    INERTIA_DURATION);
+            } // if
         } // if
     } // checkInertia
     
@@ -110,6 +121,8 @@ var EventMonitor = function(target, handlers, params) {
         var currentX = 0,
             currentY = 0,
             lastX = 0;
+            
+        // COG.info('inertia pan x = ' + changeX + ', y = ' + changeY);
         
         COG.tweenValue(0, changeX, easing, duration, function(val, complete) {
             lastX = currentX;

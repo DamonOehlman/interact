@@ -148,6 +148,11 @@ var MouseHandler = function(targetElement, observable, opts) {
             deltaY = evtY - lastY,
             current = point(evtX, evtY);
             
+        // if the offset has not been calculated, then determine it now
+        if (! offset) { 
+            offset = getOffset(targetElement);
+        } // if
+            
         // trigger the event
         observable.triggerCustom(
             eventName, 
