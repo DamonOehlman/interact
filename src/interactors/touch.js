@@ -273,16 +273,6 @@ var TouchHandler = function(targetElement, observable, opts) {
             
             // if this is the last touch to be removed do some extra checks
             if (! touchesCurrent) {
-                if (touchMode === TOUCH_MODE_TAP) {
-                    // trigger the pointer move event
-                    observable.triggerCustom(
-                        'tap',
-                        genEventProps('touch', evt),
-                        changedTouches,
-                        offsetTouches
-                    );
-                } // if
-                
                 // trigger the pointer up
                 observable.triggerCustom(
                     'pointerUp',
