@@ -80,7 +80,8 @@ COG.extend = function() {
                 var eventCallbacks = getHandlersForName(target, eventName),
                     evt = {
                         cancel: false,
-                        name: eventName
+                        name: eventName,
+                        source: this
                     },
                     eventArgs;
 
@@ -136,150 +137,10 @@ COG.extend = function() {
     };
 })();
 
-var FNS_TIME = [
-        'webkitAnimationTime',
-        'mozAnimationTime',
-        'animationTime',
-        'webkitAnimationStartTime',
-        'mozAnimationStartTime',
-        'animationStartTime'
-    ],
-    FNS_FRAME = [
-        'webkitRequestAnimationFrame',
-        'mozRequestAnimationFrame',
-        'requestAnimationFrame'
-    ];
-
-var animTime = function() {
-    return new Date().getTime();
-};
-
-var animFrame = function(callback) {
-    setTimeout(function() {
-        callback(animTime());
-    }, 1000 / 60);
-};
-
-FNS_TIME.forEach(function(fn) {
-    if (fn in window) {
-        animTime = function() {
-            return window[fn];
-        };
-    } // if
-});
-
-FNS_FRAME.forEach(function(fn) {
-    if (fn in window) {
-        animFrame = function(callback) {
-            window[fn](callback);
-        };
-    } // if
-});
-
-COG.animTime = animTime;
-COG.animFrame = animFrame;
-
-/**
-# COG.Loopage
-This module implements a control loop that can be used to centralize
-jobs draw loops, animation calculations, partial calculations for COG.Job
-instances, etc.
-*/
-COG.Loopage = (function() {
-    var frameId = 0,
-        workerCount = 0,
-        workers = [],
-        removalQueue = [];
-
-    function LoopWorker(params) {
-        var self = COG.extend({
-            id: workerCount++,
-            frequency: 0,
-            after: 0,
-            single: false,
-            lastTick: 0,
-            execute: function() {}
-        }, params);
-
-        return self;
-    } // LoopWorker
-
-
-    /* internal functions */
-
-    function joinLoop(params) {
-        var worker = new LoopWorker(params);
-        if (worker.after > 0) {
-            worker.lastTick = new Date().getTime() + worker.after;
-        } // if
-
-        COG.observable(worker);
-        worker.bind('complete', function() {
-            leaveLoop(worker.id);
-        });
-
-        workers.unshift(worker);
-        reschedule();
-
-        return worker;
-    } // joinLoop
-
-    function leaveLoop(workerId) {
-        removalQueue.push(workerId);
-        reschedule();
-    } // leaveLoop
-
-    function reschedule() {
-        if (! frameId) {
-            frameId = animFrame(runLoop);
-        } // if
-
-        recalcSleepFrequency = true;
-    } // reschedule
-
-    function runLoop() {
-        var ii,
-            tickCount = animTime(),
-            workerCount = workers.length;
-
-        while (removalQueue.length > 0) {
-            var workerId = removalQueue.shift();
-
-            for (ii = workerCount; ii--; ) {
-                if (workers[ii].id === workerId) {
-                    workers.splice(ii, 1);
-                    break;
-                } // if
-            } // for
-
-            workerCount = workers.length;
-        } // while
-
-        for (ii = workerCount; ii--; ) {
-            var workerDiff = tickCount - workers[ii].lastTick;
-
-            if (workers[ii].lastTick === 0 || workerDiff >= workers[ii].frequency) {
-                workers[ii].execute(tickCount, workers[ii]);
-                workers[ii].lastTick = tickCount;
-
-                if (workers[ii].single) {
-                    workers[ii].trigger('complete');
-                } // if
-            } // if
-        } // for
-
-        frameId = workerCount ? animFrame(runLoop) : 0;
-    } // runLoop
-
-    return {
-        join: joinLoop,
-        leave: leaveLoop
-    };
-})();
-
 (function() {
     var BACK_S = 1.70158,
         HALF_PI = Math.PI / 2,
+        ANI_WAIT = 1000 / 60 | 0,
 
         abs = Math.abs,
         pow = Math.pow,
@@ -287,7 +148,6 @@ COG.Loopage = (function() {
         asin = Math.asin,
         cos = Math.cos,
 
-        tweens = [],
         tweenWorker = null,
         updatingTweens = false;
 
@@ -420,136 +280,11 @@ COG.Loopage = (function() {
         }
     };
 
-    /* define the Tween class */
-
-    /**
-    # COG.Tween
-    */
-    var Tween = COG.Tween = function(params) {
-        params = COG.extend({
-            target: null,
-            property: null,
-            startValue: 0,
-            endValue: null,
-            duration: 2000,
-            tweenFn: easing('sine.out'),
-            complete: null
-        }, params);
-
-        var startTicks = new Date().getTime(),
-            updateListeners = [],
-            complete = false,
-            beginningValue = 0.0,
-            change = 0;
-
-        function notifyListeners(updatedValue, complete) {
-            for (var ii = updateListeners.length; ii--; ) {
-                updateListeners[ii](updatedValue, complete);
-            } // for
-        } // notifyListeners
-
-        var self = {
-            isComplete: function() {
-                return complete;
-            },
-
-            triggerComplete: function(cancelled) {
-                if (params.complete) {
-                    params.complete(cancelled);
-                } // if
-            },
-
-            update: function(tickCount) {
-                var elapsed = tickCount - startTicks,
-                    updatedValue = params.tweenFn(
-                                        elapsed,
-                                        beginningValue,
-                                        change,
-                                        params.duration);
-
-                if (params.target) {
-                    params.target[params.property] = updatedValue;
-                } // if
-
-                notifyListeners(updatedValue);
-
-                complete = startTicks + params.duration <= tickCount;
-                if (complete) {
-                    if (params.target) {
-                        params.target[params.property] = params.tweenFn(params.duration, beginningValue, change, params.duration);
-                    } // if
-
-                    notifyListeners(updatedValue, true);
-                } // if
-            },
-
-            requestUpdates: function(callback) {
-                updateListeners.push(callback);
-            }
-        };
-
-        beginningValue =
-            (params.target && params.property && params.target[params.property]) ? params.target[params.property] : params.startValue;
-
-        if (typeof params.endValue !== 'undefined') {
-            change = (params.endValue - beginningValue);
-        } // if
-
-        if (change == 0) {
-            complete = true;
-        } // if..else
-
-        wakeTweens();
-
-        return self;
-    };
-
     /* animation internals */
 
     function simpleTypeName(typeName) {
         return typeName.replace(/[\-\_\s\.]/g, '').toLowerCase();
     } // simpleTypeName
-
-    function updateTweens(tickCount, worker) {
-        if (updatingTweens) { return tweens.length; }
-
-        updatingTweens = true;
-        try {
-            var ii = 0;
-            while (ii < tweens.length) {
-                if (tweens[ii].isComplete()) {
-                    tweens[ii].triggerComplete(false);
-                    tweens.splice(ii, 1);
-                }
-                else {
-                    tweens[ii].update(tickCount);
-                    ii++;
-                } // if..else
-            } // while
-        }
-        finally {
-            updatingTweens = false;
-        } // try..finally
-
-        if (tweens.length === 0) {
-            tweenWorker.trigger('complete');
-        } // if
-
-        return tweens.length;
-    } // update
-
-    function wakeTweens() {
-        if (tweenWorker) { return; }
-
-        tweenWorker = COG.Loopage.join({
-            execute: updateTweens,
-            frequency: 20
-        });
-
-        tweenWorker.bind('complete', function(evt) {
-            tweenWorker = null;
-        });
-    } // wakeTweens
 
     /* tween exports */
 
@@ -558,25 +293,30 @@ COG.Loopage = (function() {
     */
     COG.tweenValue = function(startValue, endValue, fn, duration, callback) {
 
-        var startTicks = animTime(),
+        var startTicks = new Date().getTime(),
+            lastTicks = 0,
             change = endValue - startValue,
             tween = {};
 
         function runTween(tickCount) {
-            var elapsed = tickCount - startTicks,
-                updatedValue = fn(elapsed, startValue, change, duration),
-                complete = startTicks + duration <= tickCount,
-                cont = !complete,
-                retVal;
+            tickCount = tickCount ? tickCount : new Date().getTime();
 
-            if (callback) {
-                retVal = callback(updatedValue, complete, elapsed);
+            if (lastTicks + ANI_WAIT < tickCount) {
+                var elapsed = tickCount - startTicks,
+                    updatedValue = fn(elapsed, startValue, change, duration),
+                    complete = startTicks + duration <= tickCount,
+                    cont = !complete,
+                    retVal;
 
-                cont = typeof retVal != 'undefined' ? retVal && cont : cont;
-            } // if
+                if (callback) {
+                    retVal = callback(updatedValue, complete, elapsed);
 
-            if (cont) {
-                animFrame(runTween);
+                    cont = typeof retVal != 'undefined' ? retVal && cont : cont;
+                } // if
+
+                if (cont) {
+                    animFrame(runTween);
+                } // if
             } // if
         } // runTween
 
@@ -584,55 +324,6 @@ COG.Loopage = (function() {
 
         return tween;
     }; // T5.tweenValue
-
-    /*
-    # T5.tween
-    */
-    COG.tween = function(target, property, targetValue, fn, callback, duration) {
-        var fnresult = new Tween({
-            target: target,
-            property: property,
-            endValue: targetValue,
-            tweenFn: fn,
-            duration: duration,
-            complete: callback
-        });
-
-        tweens.push(fnresult);
-        return fnresult;
-    }; // T5.tween
-
-    /**
-    # COG.endTweens
-    */
-    COG.endTweens = function(checkCallback) {
-        if (updatingTweens) { return ; }
-
-        updatingTweens = true;
-        try {
-            var ii = 0;
-
-            while (ii < tweens.length) {
-                if ((! checkCallback) || checkCallback(tweens[ii])) {
-                    tweens[ii].triggerComplete(true);
-                    tweens.splice(ii, 1);
-                }
-                else {
-                    ii++;
-                } // if..else
-            } // for
-        }
-        finally {
-            updatingTweens = false;
-        } // try..finally
-    };
-
-    /**
-    # COG.getTweens
-    */
-    COG.getTweens = function() {
-        return [].concat(tweens);
-    };
 
     /**
     # COG.easing
@@ -717,10 +408,11 @@ var EventMonitor = function(target, handlers, params) {
         observable: null
     }, params);
 
-    var MAXMOVE_TAP = 20,
-        INERTIA_DURATION = 500,
-        INERTIA_MAXDIST = 300,
-        INERTIA_TIMEOUT = 50;
+    var MAXMOVE_TAP = 20, // pixels
+        INERTIA_DURATION = 500, // ms
+        INERTIA_MAXDIST = 300, // pixels
+        INERTIA_TIMEOUT = 50, // ms
+        INERTIA_IDLE_DISTANCE = 15; // pixels
 
     var observable = params.observable,
         pannableOpts = null,
@@ -739,8 +431,11 @@ var EventMonitor = function(target, handlers, params) {
             vectorY = 0,
             diffX,
             diffY,
-            diffTicks,
-            totalTicks = evtCount > 0 ? (new Date().getTime() - events[evtCount-1].ticks) : 0,
+            distance,
+            theta,
+            extraDistance,
+            totalTicks = 0, // evtCount > 0 ? (new Date().getTime() - events[evtCount-1].ticks) : 0,
+            xyRatio = 1,
             ii;
 
         ii = events.length;
@@ -751,19 +446,25 @@ var EventMonitor = function(target, handlers, params) {
         includedCount = evtCount - ii;
 
         if (includedCount > 1) {
-            for (; ii < evtCount; ii++) {
-                diffX = events[ii].x - events[ii - 1].x;
-                diffY = events[ii].y - events[ii - 1].y;
-                diffTicks = events[ii].ticks - events[ii - 1].ticks;
+            diffX = events[evtCount - 1].x - events[ii].x;
+            diffY = events[evtCount - 1].y - events[ii].y;
+            distance = Math.sqrt(diffX * diffX + diffY * diffY) | 0;
 
-                vectorX += diffX / diffTicks;
-                vectorY += diffY / diffTicks;
-            } // for
+            if (distance > INERTIA_IDLE_DISTANCE) {
+                diffX = events[evtCount - 1].x - events[0].x;
+                diffY = events[evtCount - 1].y - events[0].y;
+                distance = Math.sqrt(diffX * diffX + diffY * diffY) | 0;
+                theta = Math.asin(diffY / distance);
 
-            vectorX = Math.min((vectorX / includedCount) * INERTIA_DURATION | 0, INERTIA_MAXDIST);
-            vectorY = Math.min((vectorY / includedCount) * INERTIA_DURATION | 0, INERTIA_MAXDIST);
+                extraDistance = distance * INERTIA_DURATION / totalTicks | 0;
+                extraDistance = extraDistance > INERTIA_MAXDIST ? INERTIA_MAXDIST : extraDistance;
 
-            inertiaPan(vectorX, vectorY, COG.easing('quad.out'), INERTIA_DURATION);
+                inertiaPan(
+                    Math.cos(diffX > 0 ? theta : Math.PI - theta) * extraDistance,
+                    Math.sin(theta) * extraDistance,
+                    COG.easing('sine.out'),
+                    INERTIA_DURATION);
+            } // if
         } // if
     } // checkInertia
 
@@ -806,6 +507,7 @@ var EventMonitor = function(target, handlers, params) {
         var currentX = 0,
             currentY = 0,
             lastX = 0;
+
 
         COG.tweenValue(0, changeX, easing, duration, function(val, complete) {
             lastX = currentX;
@@ -1031,8 +733,8 @@ function getOffset(obj) {
     } // if
 
     return {
-        x: calcLeft,
-        y: calcTop
+        left: calcLeft,
+        top: calcTop
     };
 } // getOffset
 
@@ -1054,8 +756,8 @@ function matchTarget(evt, targetElement) {
 
 function pointerOffset(absPoint, offset) {
     return {
-        x: absPoint.x - (offset ? offset.x : 0),
-        y: absPoint.y - (offset ? offset.y : 0)
+        x: absPoint.x - (offset ? offset.left : 0),
+        y: absPoint.y - (offset ? offset.top : 0)
     };
 } // triggerPositionEvent
 
@@ -1079,7 +781,6 @@ var MouseHandler = function(targetElement, observable, opts) {
         isFlashCanvas = typeof FlashCanvas != 'undefined',
         buttonDown = false,
         start,
-        offset,
         currentX,
         currentY,
         lastX,
@@ -1087,11 +788,28 @@ var MouseHandler = function(targetElement, observable, opts) {
 
     /* internal functions */
 
+    function getPagePos(evt) {
+        if (evt.pageX && evt.pageY) {
+            return point(evt.pageX, evt.pageY);
+        }
+        else {
+            var doc = document.documentElement,
+    			body = document.body;
+
+            return point(
+                evt.clientX +
+                    (doc && doc.scrollLeft || body && body.scrollLeft || 0) -
+                    (doc && doc.clientLeft || body && body.clientLeft || 0),
+                evt.clientY +
+                    (doc && doc.scrollTop  || body && body.scrollTop  || 0) -
+                    (doc && doc.clientTop  || body && body.clientTop  || 0)
+            );
+        } // if
+    } // getPagePos
+
     function handleClick(evt) {
         if (matchTarget(evt, targetElement)) {
-            var clickXY = point(
-                evt.pageX ? evt.pageX : evt.screenX,
-                evt.pageY ? evt.pageY : evt.screenY);
+            var clickXY = getPagePos(evt);
 
             observable.triggerCustom(
                 'tap',
@@ -1106,11 +824,7 @@ var MouseHandler = function(targetElement, observable, opts) {
         COG.info('captured double click');
 
         if (matchTarget(evt, targetElement)) {
-            var clickXY = point(
-                evt.pageX ? evt.pageX : evt.screenX,
-                evt.pageY ? evt.pageY : evt.screenY);
-
-            COG.info('captured double click + target matched');
+            var clickXY = getPagePos(evt);
 
             observable.triggerCustom(
                 'doubleTap',
@@ -1126,27 +840,30 @@ var MouseHandler = function(targetElement, observable, opts) {
             buttonDown = isLeftButton(evt);
 
             if (buttonDown) {
+                var pagePos = getPagePos(evt);
+
                 targetElement.style.cursor = 'move';
                 preventDefault(evt);
 
-                lastX = evt.pageX ? evt.pageX : evt.screenX;
-                lastY = evt.pageY ? evt.pageY : evt.screenY;
+                lastX = pagePos.x;
+                lastY = pagePos.y;
                 start = point(lastX, lastY);
-                offset = getOffset(targetElement);
 
                 observable.triggerCustom(
                     'pointerDown',
                     genEventProps('mouse', evt),
                     start,
-                    pointerOffset(start, offset)
+                    pointerOffset(start, getOffset(targetElement))
                 );
             }
         } // if
     } // mouseDown
 
     function handleMouseMove(evt) {
-        currentX = evt.pageX ? evt.pageX : evt.screenX;
-        currentY = evt.pageY ? evt.pageY : evt.screenY;
+        var pagePos = getPagePos(evt);
+
+        currentX = pagePos.x;
+        currentY = pagePos.y;
 
         if (matchTarget(evt, targetElement)) {
             triggerCurrent(evt, buttonDown ? 'pointerMove' : 'pointerHover');
@@ -1215,7 +932,7 @@ var MouseHandler = function(targetElement, observable, opts) {
             eventName,
             genEventProps('mouse', evt),
             current,
-            pointerOffset(current, offset),
+            pointerOffset(current, getOffset(targetElement)),
             point(deltaX, deltaY)
         );
 
@@ -1381,7 +1098,7 @@ var TouchHandler = function(targetElement, observable, opts) {
             offset = getOffset(targetElement);
 
             var changedTouches = getTouchData(evt, 'changedTouches'),
-                relTouches = copyTouches(changedTouches, offset.x, offset.y);
+                relTouches = copyTouches(changedTouches, offset.left, offset.top);
 
             if (! touchesStart) {
                 touchMode = TOUCH_MODE_TAP;
@@ -1466,7 +1183,7 @@ var TouchHandler = function(targetElement, observable, opts) {
                         'pointerMove',
                         genEventProps('touch', evt),
                         touchesCurrent,
-                        copyTouches(touchesCurrent, offset.x, offset.y),
+                        copyTouches(touchesCurrent, offset.left, offset.top),
                         point(
                             touchesCurrent.x - touchesLast.x,
                             touchesCurrent.y - touchesLast.y)
@@ -1478,7 +1195,7 @@ var TouchHandler = function(targetElement, observable, opts) {
                         'pointerMoveMulti',
                         genEventProps('touch', evt),
                         touchesCurrent,
-                        copyTouches(touchesCurrent, offset.x, offset.y)
+                        copyTouches(touchesCurrent, offset.left, offset.top)
                     );
                 } // if
             } // if
@@ -1490,20 +1207,11 @@ var TouchHandler = function(targetElement, observable, opts) {
     function handleTouchEnd(evt) {
         if (matchTarget(evt, targetElement)) {
             var changedTouches = getTouchData(evt, 'changedTouches'),
-                offsetTouches = copyTouches(changedTouches, offset.x, offset.y);
+                offsetTouches = copyTouches(changedTouches, offset.left, offset.top);
 
             touchesCurrent = getTouchData(evt);
 
             if (! touchesCurrent) {
-                if (touchMode === TOUCH_MODE_TAP) {
-                    observable.triggerCustom(
-                        'tap',
-                        genEventProps('touch', evt),
-                        changedTouches,
-                        offsetTouches
-                    );
-                } // if
-
                 observable.triggerCustom(
                     'pointerUp',
                     genEventProps('touch', evt),
