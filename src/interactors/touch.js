@@ -134,7 +134,7 @@ var TouchHandler = function(targetElement, observable, opts) {
 
             // initialise variables
             var changedTouches = getTouchData(evt, 'changedTouches'),
-                relTouches = copyTouches(changedTouches, offset.x, offset.y);
+                relTouches = copyTouches(changedTouches, offset.left, offset.top);
             
             if (! touchesStart) {
                 // reset the touch mode to unknown
@@ -241,7 +241,7 @@ var TouchHandler = function(targetElement, observable, opts) {
                         'pointerMove',
                         genEventProps('touch', evt),
                         touchesCurrent,
-                        copyTouches(touchesCurrent, offset.x, offset.y),
+                        copyTouches(touchesCurrent, offset.left, offset.top),
                         point(
                             touchesCurrent.x - touchesLast.x, 
                             touchesCurrent.y - touchesLast.y)
@@ -254,7 +254,7 @@ var TouchHandler = function(targetElement, observable, opts) {
                         'pointerMoveMulti', 
                         genEventProps('touch', evt),
                         touchesCurrent, 
-                        copyTouches(touchesCurrent, offset.x, offset.y)
+                        copyTouches(touchesCurrent, offset.left, offset.top)
                     );
                 } // if
             } // if
@@ -266,7 +266,7 @@ var TouchHandler = function(targetElement, observable, opts) {
     function handleTouchEnd(evt) {
         if (matchTarget(evt, targetElement)) {
             var changedTouches = getTouchData(evt, 'changedTouches'),
-                offsetTouches = copyTouches(changedTouches, offset.x, offset.y);
+                offsetTouches = copyTouches(changedTouches, offset.left, offset.top);
             
             // get the current touches
             touchesCurrent = getTouchData(evt);

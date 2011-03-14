@@ -11,7 +11,6 @@ var MouseHandler = function(targetElement, observable, opts) {
         isFlashCanvas = typeof FlashCanvas != 'undefined',
         buttonDown = false,
         start,
-        offset,
         currentX,
         currentY,
         lastX,
@@ -19,11 +18,30 @@ var MouseHandler = function(targetElement, observable, opts) {
     
     /* internal functions */
     
+    function getPagePos(evt) {
+        if (evt.pageX && evt.pageY) {
+            return point(evt.pageX, evt.pageY);
+        }
+        else {
+            var doc = document.documentElement,
+    			body = document.body;
+
+            // code from jquery event handling:
+            // https://github.com/jquery/jquery/blob/1.5.1/src/event.js#L493
+            return point(
+                evt.clientX + 
+                    (doc && doc.scrollLeft || body && body.scrollLeft || 0) - 
+                    (doc && doc.clientLeft || body && body.clientLeft || 0),
+                evt.clientY + 
+                    (doc && doc.scrollTop  || body && body.scrollTop  || 0) - 
+                    (doc && doc.clientTop  || body && body.clientTop  || 0)
+            );
+        } // if
+    } // getPagePos
+    
     function handleClick(evt) {
         if (matchTarget(evt, targetElement)) {
-            var clickXY = point(
-                evt.pageX ? evt.pageX : evt.screenX,
-                evt.pageY ? evt.pageY : evt.screenY);
+            var clickXY = getPagePos(evt);
             
             observable.triggerCustom(
                 'tap',
@@ -38,11 +56,7 @@ var MouseHandler = function(targetElement, observable, opts) {
         COG.info('captured double click');
         
         if (matchTarget(evt, targetElement)) {
-            var clickXY = point(
-                evt.pageX ? evt.pageX : evt.screenX,
-                evt.pageY ? evt.pageY : evt.screenY);
-                
-            COG.info('captured double click + target matched');
+            var clickXY = getPagePos(evt);
             
             observable.triggerCustom(
                 'doubleTap', 
@@ -58,30 +72,33 @@ var MouseHandler = function(targetElement, observable, opts) {
             buttonDown = isLeftButton(evt);
             
             if (buttonDown) {
+                var pagePos = getPagePos(evt);
+                
                 // update the cursor and prevent the default
                 targetElement.style.cursor = 'move';
                 preventDefault(evt);
                 
-                lastX = evt.pageX ? evt.pageX : evt.screenX;
-                lastY = evt.pageY ? evt.pageY : evt.screenY;
+                lastX = pagePos.x; 
+                lastY = pagePos.y;
                 start = point(lastX, lastY);
-                offset = getOffset(targetElement);
                 
                 // trigger the pointer down event
                 observable.triggerCustom(
                     'pointerDown', 
                     genEventProps('mouse', evt),
                     start, 
-                    pointerOffset(start, offset)
+                    pointerOffset(start, getOffset(targetElement))
                 );
             }
         } // if
     } // mouseDown
     
     function handleMouseMove(evt) {
+        var pagePos = getPagePos(evt);
+        
         // capture the current x and current y
-        currentX = evt.pageX ? evt.pageX : evt.screenX;
-        currentY = evt.pageY ? evt.pageY : evt.screenY;
+        currentX = pagePos.x;
+        currentY = pagePos.y;
         
         if (matchTarget(evt, targetElement)) {
             triggerCurrent(evt, buttonDown ? 'pointerMove' : 'pointerHover');
@@ -148,17 +165,12 @@ var MouseHandler = function(targetElement, observable, opts) {
             deltaY = evtY - lastY,
             current = point(evtX, evtY);
             
-        // if the offset has not been calculated, then determine it now
-        if (! offset) { 
-            offset = getOffset(targetElement);
-        } // if
-            
         // trigger the event
         observable.triggerCustom(
             eventName, 
             genEventProps('mouse', evt),
             current,
-            pointerOffset(current, offset),
+            pointerOffset(current, getOffset(targetElement)),
             point(deltaX, deltaY)
         );
         

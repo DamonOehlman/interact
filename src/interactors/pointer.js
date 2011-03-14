@@ -3,7 +3,7 @@
 function getOffset(obj) {
     var calcLeft = 0, 
         calcTop = 0;
-        
+
     if (obj.offsetParent) {
         do {
             calcLeft += obj.offsetLeft;
@@ -12,10 +12,10 @@ function getOffset(obj) {
             obj = obj.offsetParent;
         } while (obj);
     } // if
-    
+
     return {
-        x: calcLeft,
-        y: calcTop
+        left: calcLeft,
+        top: calcTop
     };
 } // getOffset
 
@@ -37,8 +37,8 @@ function matchTarget(evt, targetElement) {
 
 function pointerOffset(absPoint, offset) {
     return {
-        x: absPoint.x - (offset ? offset.x : 0),
-        y: absPoint.y - (offset ? offset.y : 0)
+        x: absPoint.x - (offset ? offset.left : 0),
+        y: absPoint.y - (offset ? offset.top : 0)
     };    
 } // triggerPositionEvent
 
