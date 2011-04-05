@@ -142,6 +142,7 @@ COG.extend = function() {
 (function() {
     var BACK_S = 1.70158,
         HALF_PI = Math.PI / 2,
+        TWO_PI = Math.PI * 2,
         ANI_WAIT = 1000 / 60 | 0,
 
         abs = Math.abs,
@@ -539,7 +540,7 @@ var EventMonitor = function(target, handlers, params) {
     function unbind() {
         observable.unbind();
 
-        for (var ii = 0; ii < handlerInstances.length; ii++) {
+        for (ii = 0; ii < handlerInstances.length; ii++) {
             handlerInstances[ii].unbind();
         } // for
 
@@ -748,8 +749,10 @@ function genEventProps(source, evt) {
 } // genEventProps
 
 function matchTarget(evt, targetElement) {
-    var targ = evt.target ? evt.target : evt.srcElement;
-    while (targ && (targ !== targetElement) && targ.nodeName && (targ.nodeName.toUpperCase() != 'CANVAS')) {
+    var targ = evt.target ? evt.target : evt.srcElement,
+        targClass = targ.className;
+
+    while (targ && (targ !== targetElement)) {
         targ = targ.parentNode;
     } // while
 
@@ -763,7 +766,7 @@ function pointerOffset(absPoint, offset) {
     };
 } // triggerPositionEvent
 
-function preventDefault(evt) {
+function preventDefault(evt, immediate) {
     if (evt.preventDefault) {
         evt.preventDefault();
         evt.stopPropagation();
@@ -771,6 +774,10 @@ function preventDefault(evt) {
     else if (evt.cancelBubble) {
         evt.cancelBubble();
     } // if..else
+
+    if (immediate && evt.stopImmediatePropagation) {
+        evt.stopImmediatePropagation();
+    } // if
 } // preventDefault
 var MouseHandler = function(targetElement, observable, opts) {
     opts = COG.extend({
@@ -845,7 +852,7 @@ var MouseHandler = function(targetElement, observable, opts) {
                 var pagePos = getPagePos(evt);
 
                 targetElement.style.cursor = 'move';
-                preventDefault(evt);
+                preventDefault(evt, true);
 
                 lastX = pagePos.x;
                 lastY = pagePos.y;

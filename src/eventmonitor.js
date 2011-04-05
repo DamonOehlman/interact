@@ -155,7 +155,7 @@ var EventMonitor = function(target, handlers, params) {
         observable.unbind();
         
         // unbind handler instances
-        for (var ii = 0; ii < handlerInstances.length; ii++) {
+        for (ii = 0; ii < handlerInstances.length; ii++) {
             handlerInstances[ii].unbind();
         } // for
         

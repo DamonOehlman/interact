@@ -76,7 +76,7 @@ var MouseHandler = function(targetElement, observable, opts) {
                 
                 // update the cursor and prevent the default
                 targetElement.style.cursor = 'move';
-                preventDefault(evt);
+                preventDefault(evt, true);
                 
                 lastX = pagePos.x; 
                 lastY = pagePos.y;

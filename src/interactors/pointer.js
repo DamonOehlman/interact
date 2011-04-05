@@ -27,8 +27,13 @@ function genEventProps(source, evt) {
 } // genEventProps
 
 function matchTarget(evt, targetElement) {
-    var targ = evt.target ? evt.target : evt.srcElement;
-    while (targ && (targ !== targetElement) && targ.nodeName && (targ.nodeName.toUpperCase() != 'CANVAS')) {
+    var targ = evt.target ? evt.target : evt.srcElement,
+        targClass = targ.className;
+    
+    // while we have a target, and that target is not the target element continue
+    // additionally, if we hit an element that has an interactor bound to it (will have the class interactor)
+    // then also stop
+    while (targ && (targ !== targetElement)) {
         targ = targ.parentNode;
     } // while
     
@@ -42,7 +47,7 @@ function pointerOffset(absPoint, offset) {
     };    
 } // triggerPositionEvent
 
-function preventDefault(evt) {
+function preventDefault(evt, immediate) {
     if (evt.preventDefault) {
         evt.preventDefault();
         evt.stopPropagation();
@@ -50,4 +55,10 @@ function preventDefault(evt) {
     else if (evt.cancelBubble) {
         evt.cancelBubble();
     } // if..else
+    
+    // if the immediate flag is set and the stop immediate propogation method is available
+    // then stop propogation in it's tracks...
+    if (immediate && evt.stopImmediatePropagation) {
+        evt.stopImmediatePropagation();
+    } // if
 } // preventDefault
