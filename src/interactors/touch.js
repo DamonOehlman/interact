@@ -175,7 +175,7 @@ var TouchHandler = function(targetElement, observable, opts) {
     function handleTouchMove(evt) {
         if (matchTarget(evt, targetElement)) {
             // prevent the default action
-            evt.preventDefault();
+            preventDefault(evt);
             
             // fill the touch data
             touchesCurrent = getTouchData(evt);

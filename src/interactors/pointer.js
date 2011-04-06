@@ -47,7 +47,7 @@ function pointerOffset(absPoint, offset) {
     };    
 } // triggerPositionEvent
 
-function preventDefault(evt) {
+function preventDefault(evt, immediate) {
     if (evt.preventDefault) {
         evt.preventDefault();
         evt.stopPropagation();
@@ -55,4 +55,8 @@ function preventDefault(evt) {
     else if (typeof evt.cancelBubble != 'undefined') {
         evt.cancelBubble = true;
     } // if..else
+    
+    if (immediate && evt.stopImmediatePropagation) {
+        evt.stopImmediatePropagation();
+    } // if
 } // preventDefault

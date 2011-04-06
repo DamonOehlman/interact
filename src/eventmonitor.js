@@ -109,7 +109,7 @@ var EventMonitor = function(target, handlers, params) {
     function handlePointerUp(evt, absXY, relXY) {
         // if the total delta is within tolerances then trigger a tap also
         if (! deltaGreaterThan(MAXMOVE_TAP)) {
-            observable.trigger('tap', absXY, relXY);
+            observable.triggerCustom('tap', evt, absXY, relXY);
         }
         // otherwise, if we are working with a panning interface check for inertia
         else if (pannableOpts) {

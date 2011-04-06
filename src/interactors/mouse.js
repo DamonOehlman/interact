@@ -39,19 +39,6 @@ var MouseHandler = function(targetElement, observable, opts) {
         } // if
     } // getPagePos
     
-    function handleClick(evt) {
-        if (matchTarget(evt, targetElement)) {
-            var clickXY = getPagePos(evt);
-            
-            observable.triggerCustom(
-                'tap',
-                genEventProps('mouse', evt),
-                clickXY, 
-                pointerOffset(clickXY, getOffset(targetElement))
-            );
-        } // if
-    } // handleClick
-    
     function handleDoubleClick(evt) {
         COG.info('captured double click');
         
@@ -198,7 +185,6 @@ var MouseHandler = function(targetElement, observable, opts) {
     opts.binder('mousedown', handleMouseDown);
     opts.binder('mousemove', handleMouseMove);
     opts.binder('mouseup', handleMouseUp);
-    // opts.binder('click', handleClick);
     opts.binder('dblclick', handleDoubleClick);
     
     // bind mouse wheel events
