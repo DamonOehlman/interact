@@ -47,18 +47,12 @@ function pointerOffset(absPoint, offset) {
     };    
 } // triggerPositionEvent
 
-function preventDefault(evt, immediate) {
+function preventDefault(evt) {
     if (evt.preventDefault) {
         evt.preventDefault();
         evt.stopPropagation();
     }
-    else if (evt.cancelBubble) {
-        evt.cancelBubble();
+    else if (typeof evt.cancelBubble != 'undefined') {
+        evt.cancelBubble = true;
     } // if..else
-    
-    // if the immediate flag is set and the stop immediate propogation method is available
-    // then stop propogation in it's tracks...
-    if (immediate && evt.stopImmediatePropagation) {
-        evt.stopImmediatePropagation();
-    } // if
 } // preventDefault

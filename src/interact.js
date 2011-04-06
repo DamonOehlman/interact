@@ -13,22 +13,30 @@ INTERACT = (function() {
     
     /* internal functions */
     
-    function genBinder(useBody) {
-        return function(evtName, callback, customTarget) {
-            var target = customTarget ? customTarget : (useBody ? document.body : document);
-
+    function genBinder(target) {
+        return function(evtName, callback) {
             target.addEventListener(evtName, callback, false);
         };
     } // bindDoc
 
-    function genUnbinder(useBody) {
+    function genUnbinder(target) {
         return function(evtName, callback, customTarget) {
-            var target = customTarget ? customTarget : (useBody ? document.body : document);
-
             target.removeEventListener(evtName, callback, false);
         };
     } // unbindDoc
     
+    function genIEBinder(target) {
+        return function(evtName, callback) {
+            target.attachEvent('on' + evtName, callback);
+        };
+    } // genIEBinder
+    
+    function genIEUnbinder(target) {
+        return function(evtName, callback) {
+            target.detachEvent('on' + evtName, callback);
+        };
+    } // genIEUnbinder
+
     function getHandlers(types, capabilities) {
         var handlers = [];
         
@@ -54,14 +62,6 @@ INTERACT = (function() {
         return handlers;
     } // getHandlers
 
-    function ieBind(evtName, callback, customTarget) {
-        (customTarget ? customTarget : document).attachEvent('on' + evtName, callback);
-    } // ieBind
-
-    function ieUnbind(evtName, callback, customTarget) {
-        (customTarget ? customTarget : document).detachEvent('on' + evtName, callback);
-    } // ieUnbind
-    
     function point(x, y) {
         return {
             x: x ? x : 0,
@@ -86,7 +86,7 @@ INTERACT = (function() {
     function watch(target, opts, caps) {
         // initialise the options
         opts = COG.extend({
-            bindToBody: false,
+            bindTarget: null,
             observable: null,
             isIE: typeof window.attachEvent != 'undefined',
             types: null
@@ -105,8 +105,8 @@ INTERACT = (function() {
         } // if
         
         // initialise the binder and unbinder
-        opts.binder = opts.isIE ? ieBind : genBinder(opts.bindToBody);
-        opts.unbinder = opts.isIE ? ieUnbind : genUnbinder(opts.bindToBody);
+        opts.binder = (opts.isIE ? genIEBinder : genBinder)(opts.bindTarget || document);
+        opts.unbinder = (opts.isIE ? genIEBinder : genUnbinder)(opts.bindTarget || document);
         
         // return the event monitor
         return new EventMonitor(target, getHandlers(opts.types, capabilities), opts);

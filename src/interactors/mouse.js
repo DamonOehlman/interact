@@ -185,25 +185,25 @@ var MouseHandler = function(targetElement, observable, opts) {
     
     function unbind() {
         // wire up the event handlers
-        opts.unbinder('mousedown', handleMouseDown, false);
-        opts.unbinder('mousemove', handleMouseMove, false);
-        opts.unbinder('mouseup', handleMouseUp, false);
+        opts.unbinder('mousedown', handleMouseDown);
+        opts.unbinder('mousemove', handleMouseMove);
+        opts.unbinder('mouseup', handleMouseUp);
 
         // bind mouse wheel events
-        opts.unbinder("mousewheel", handleWheel, document);
-        opts.unbinder("DOMMouseScroll", handleWheel, document);
+        opts.unbinder("mousewheel", handleWheel);
+        opts.unbinder("DOMMouseScroll", handleWheel);
     } // unbind
     
     // wire up the event handlers
-    opts.binder('mousedown', handleMouseDown, false);
-    opts.binder('mousemove', handleMouseMove, false);
-    opts.binder('mouseup', handleMouseUp, false);
-    // opts.binder('click', handleClick, false);
-    opts.binder('dblclick', handleDoubleClick, false);
+    opts.binder('mousedown', handleMouseDown);
+    opts.binder('mousemove', handleMouseMove);
+    opts.binder('mouseup', handleMouseUp);
+    // opts.binder('click', handleClick);
+    opts.binder('dblclick', handleDoubleClick);
     
     // bind mouse wheel events
-    opts.binder('mousewheel', handleWheel, document);
-    opts.binder('DOMMouseScroll', handleWheel, document);
+    opts.binder('mousewheel', handleWheel);
+    opts.binder('DOMMouseScroll', handleWheel);
     
     return {
         unbind: unbind

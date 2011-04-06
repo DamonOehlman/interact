@@ -308,15 +308,15 @@ var TouchHandler = function(targetElement, observable, opts) {
     /* exports */
     
     function unbind() {
-        opts.unbinder('touchstart', handleTouchStart, false);
-        opts.unbinder('touchmove', handleTouchMove, false);
-        opts.unbinder('touchend', handleTouchEnd, false);
+        opts.unbinder('touchstart', handleTouchStart);
+        opts.unbinder('touchmove', handleTouchMove);
+        opts.unbinder('touchend', handleTouchEnd);
     } // unbind
     
     // wire up the event handlers
-    opts.binder('touchstart', handleTouchStart, false);
-    opts.binder('touchmove', handleTouchMove, false);
-    opts.binder('touchend', handleTouchEnd, false);
+    opts.binder('touchstart', handleTouchStart);
+    opts.binder('touchmove', handleTouchMove);
+    opts.binder('touchend', handleTouchEnd);
     
     COG.info('initialized touch handler');
     
