@@ -112,8 +112,6 @@ INTERACT = (function() {
         return new EventMonitor(target, getHandlers(opts.types, capabilities), opts);
     } // watch
     
-    //= require "utils/inertia"
-    
     //= require "interactors/pointer"
     //= require "interactors/mouse"
     //= require "interactors/touch"
