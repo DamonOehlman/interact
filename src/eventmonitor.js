@@ -1,5 +1,5 @@
 var EventMonitor = function(target, handlers, params) {
-    params = COG.extend({
+    params = _extend({
         binder: null,
         unbinder: null,
         observable: null

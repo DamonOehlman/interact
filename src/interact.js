@@ -1,13 +1,13 @@
-//= require <cog/src/observable>
-//= require <cog/src/tween>
-//= require <cog/src/log>
-
 /**
 # INTERACT
 */
 INTERACT = (function() {
     // initialise variables
     var interactors = [];
+    
+    //= require <cog/cogs/extend>
+    //= require <cog/cogs/log>
+    //= require <cog/cogs/observable>
     
     //= require "eventmonitor"
     
@@ -49,7 +49,7 @@ INTERACT = (function() {
             // TODO: perform capabilities check
             for (var checkKey in interactor.checks) {
                 var check = interactor.checks[checkKey];
-                COG.info('checking ' + checkKey + ' capability. require: ' + check + ', capability = ' + capabilities[checkKey]);
+                _log('checking ' + checkKey + ' capability. require: ' + check + ', capability = ' + capabilities[checkKey]);
                 
                 checksPass = checksPass && (check === capabilities[checkKey]);
             } // for
@@ -73,7 +73,7 @@ INTERACT = (function() {
     /* exports */
     
     function register(typeName, opts) {
-        interactors.push(COG.extend({
+        interactors.push(_extend({
             handler: null,
             checks: {},
             type: typeName
@@ -85,7 +85,7 @@ INTERACT = (function() {
     */
     function watch(target, opts, caps) {
         // initialise the options
-        opts = COG.extend({
+        opts = _extend({
             bindTarget: null,
             observable: null,
             isIE: typeof window.attachEvent != 'undefined',
@@ -93,14 +93,14 @@ INTERACT = (function() {
         }, opts);
         
         // initialise the capabilities
-        capabilities = COG.extend({
+        capabilities = _extend({
             touch: 'ontouchstart' in window
         }, caps);
         
         // check if we need to supply an observable object
         if (! opts.observable) {
-            COG.info('creating observable');
-            opts.observable = COG.observable({});
+            _log('creating observable');
+            opts.observable = _observable({});
             globalOpts = opts;
         } // if
         

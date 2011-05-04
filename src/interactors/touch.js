@@ -1,5 +1,5 @@
 var TouchHandler = function(targetElement, observable, opts) {
-    opts = COG.extend({
+    opts = _extend({
         detailed: false,
         inertia: false
     }, opts);
@@ -318,7 +318,7 @@ var TouchHandler = function(targetElement, observable, opts) {
     opts.binder('touchmove', handleTouchMove);
     opts.binder('touchend', handleTouchEnd);
     
-    COG.info('initialized touch handler');
+    _log('initialized touch handler');
     
     return {
         unbind: unbind

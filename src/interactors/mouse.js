@@ -1,5 +1,5 @@
 var MouseHandler = function(targetElement, observable, opts) {
-    opts = COG.extend({
+    opts = _extend({
     }, opts);
     
     // initialise constants
@@ -40,7 +40,7 @@ var MouseHandler = function(targetElement, observable, opts) {
     } // getPagePos
     
     function handleDoubleClick(evt) {
-        COG.info('captured double click');
+        _log('captured double click');
         
         if (matchTarget(evt, targetElement)) {
             var clickXY = getPagePos(evt);
@@ -112,7 +112,9 @@ var MouseHandler = function(targetElement, observable, opts) {
             evt = evt || window.event;
             
             if (evt.detail) {
-                deltaY = evt.axis === 2 ? -evt.detail * WHEEL_DELTA_STEP : 0;
+                if (typeof evt.axis == 'undefined' || evt.axis === 2) {
+                    deltaY = -evt.detail * WHEEL_DELTA_STEP;
+                } // if
             }
             else {
                 deltaY = evt.wheelDeltaY ? evt.wheelDeltaY : evt.wheelDelta;
@@ -121,7 +123,7 @@ var MouseHandler = function(targetElement, observable, opts) {
                 } // if
             } // if..else
             
-            if (deltaY !== 0) {
+            if (deltaY) {
                 var current = point(currentX, currentY);
                 
                 observable.triggerCustom(
