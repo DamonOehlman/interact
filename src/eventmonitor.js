@@ -22,10 +22,6 @@ var EventMonitor = function(target, handlers, params) {
     
     /* internals */
 
-    function deltaGreaterThan(value) {
-        return Math.abs(totalDeltaX) > value || Math.abs(totalDeltaY) > value;
-    } // deltaGreaterThan
-    
     function handlePointerMove(evt, absXY, relXY, deltaXY) {
         // update the total delta
         totalDeltaX += deltaXY.x || 0;
@@ -38,8 +34,10 @@ var EventMonitor = function(target, handlers, params) {
     } // handlePointerDown
     
     function handlePointerUp(evt, absXY, relXY) {
+        var moveDelta = Math.max(Math.abs(totalDeltaX), Math.abs(totalDeltaY));
+        
         // if the total delta is within tolerances then trigger a tap also
-        if (! deltaGreaterThan(MAXMOVE_TAP)) {
+        if (moveDelta <= MAXMOVE_TAP) {
             observable.triggerCustom('tap', evt, absXY, relXY);
         } // if
     } // handlePointerUP

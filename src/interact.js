@@ -49,7 +49,7 @@ INTERACT = (function() {
             // TODO: perform capabilities check
             for (var checkKey in interactor.checks) {
                 var check = interactor.checks[checkKey];
-                _log('checking ' + checkKey + ' capability. require: ' + check + ', capability = ' + capabilities[checkKey]);
+                // _log('checking ' + checkKey + ' capability. require: ' + check + ', capability = ' + capabilities[checkKey]);
                 
                 checksPass = checksPass && (check === capabilities[checkKey]);
             } // for
@@ -99,7 +99,6 @@ INTERACT = (function() {
         
         // check if we need to supply an observable object
         if (! opts.observable) {
-            _log('creating observable');
             opts.observable = _observable({});
             globalOpts = opts;
         } // if

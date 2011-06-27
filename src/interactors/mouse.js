@@ -40,8 +40,6 @@ var MouseHandler = function(targetElement, observable, opts) {
     } // getPagePos
     
     function handleDoubleClick(evt) {
-        _log('captured double click');
-        
         if (matchTarget(evt, targetElement)) {
             var clickXY = getPagePos(evt);
             
@@ -82,7 +80,7 @@ var MouseHandler = function(targetElement, observable, opts) {
     
     function handleMouseMove(evt) {
         var pagePos = getPagePos(evt);
-        
+
         // capture the current x and current y
         currentX = pagePos.x;
         currentY = pagePos.y;
@@ -147,6 +145,10 @@ var MouseHandler = function(targetElement, observable, opts) {
         return button == 1;
     } // leftPressed
     
+    function preventDrag(evt) {
+        return !matchTarget(evt, targetElement);
+    } // preventDrag
+    
     function triggerCurrent(evt, eventName, overrideX, overrideY, updateLast) {
         var evtX = typeof overrideX != 'undefined' ? overrideX : currentX,
             evtY = typeof overrideY != 'undefined' ? overrideY : currentY,
@@ -188,6 +190,10 @@ var MouseHandler = function(targetElement, observable, opts) {
     opts.binder('mousemove', handleMouseMove);
     opts.binder('mouseup', handleMouseUp);
     opts.binder('dblclick', handleDoubleClick);
+    
+    // handle drag start and select start events to ensure moves work on ie
+    opts.binder('selectstart', preventDrag);
+    opts.binder('dragstart', preventDrag);
     
     // bind mouse wheel events
     opts.binder('mousewheel', handleWheel);

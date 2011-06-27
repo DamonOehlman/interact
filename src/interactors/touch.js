@@ -318,8 +318,6 @@ var TouchHandler = function(targetElement, observable, opts) {
     opts.binder('touchmove', handleTouchMove);
     opts.binder('touchend', handleTouchEnd);
     
-    _log('initialized touch handler');
-    
     return {
         unbind: unbind
     };
