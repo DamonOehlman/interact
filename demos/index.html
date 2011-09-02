@@ -1,36 +1,28 @@
-<!doctype html>  
+<!doctype html>
+<html lang="en">
 <head>
-	<title>Interact Demos</title>
-	<meta charset="utf-8">
-	<meta name="description" content="Interact Mobile Application Interaction Helper">
-	<meta name="author" content="Damon Oehlman - Sidelab">
-	<!--  Mobile viewport optimized: j.mp/bplateviewport -->
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<link rel="stylesheet" href="demos.css" />
-	<link rel="stylesheet" href="prettify.css" />
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
-	<script src="../interact.js"></script>
-	<script src="demos.js"></script>
-	<script src="prettify.js"></script>
+<title>demoCode Demo Runner</title>
+<meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;"/>
+<link rel="stylesheet" href="lib/dat/GUI.css" />
+<link rel="stylesheet" href="css/base.css" />
+<link rel="stylesheet" href="css/demos.css" />
+<script src="lib/jquery-1.6.1.min.js"></script>
+<script src="lib/dat/DAT.GUI.js"></script>
+<script src="lib/lab/LAB.src.js"></script>
+<script src="lib/lab/fLAB.src.js"></script>
 </head>
-<body>
-	<div id="sidebar" class="demos">
-		<h1>Interact Demos</h1>
-		<ul>
-			<li><a href="#draw">Draw</a></li>
-			<li><a href="#pan">Pan</a></li>
-			<li><a href="#zoom">Zoom</a></li>
-			<li><a href="#multitouch">Multitouch</a></li>
-		</ul>
-	</div>
-	<div id="main">
-		<canvas id="demoCanvas" width="500" height="300" />
-	</div>
-	<div id="statusContainer">
-	<span id="status"></span>
-	</div>
-	<h2>Code</h2>
-	<pre id="demoCode" class="prettyprint">
-	</pre>
+<body onload="RUNNER.init()">
+<div id="demo"></div>
+<div id="editorFrame">
+	<ul id="editorTools">
+		<li><button id="btnRun">Run Code</button></li>
+	</ul>
+	<div id="editor"></div>
+</div>
+<script src="lib/ace/ace.js"></script>
+<script src="lib/ace/theme-twilight.js"></script>
+<script src="lib/ace/mode-javascript.js"></script>
+<script src="runner/runner.js"></script>
+<script src="runner/config.js"></script>
 </body>
 </html>

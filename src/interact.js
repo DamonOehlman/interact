@@ -5,11 +5,11 @@ INTERACT = (function() {
     // initialise variables
     var interactors = [];
     
-    //= require <cog/cogs/extend>
-    //= require <cog/cogs/log>
-    //= require <cog/cogs/observable>
+    //= cog!extend
+    //= cog!log
+    //= cog!observable
     
-    //= require "eventmonitor"
+    //= eventmonitor
     
     /* internal functions */
     
@@ -111,9 +111,9 @@ INTERACT = (function() {
         return new EventMonitor(target, getHandlers(opts.types, capabilities), opts);
     } // watch
     
-    //= require "interactors/pointer"
-    //= require "interactors/mouse"
-    //= require "interactors/touch"
+    //= interactors/pointer
+    //= interactors/mouse
+    //= interactors/touch
     
     return {
         register: register,
