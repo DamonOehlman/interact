@@ -1,0 +1,174 @@
+<!doctype html>
+<!--[if lt IE 7]> <html class="no-js ie6 oldie" lang="en"> <![endif]-->
+<!--[if IE 7]>    <html class="no-js ie7 oldie" lang="en"> <![endif]-->
+<!--[if IE 8]>    <html class="no-js ie8 oldie" lang="en"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+  <title></title>
+  <meta name="description" content="">
+  <meta name="author" content="Your Name Here">
+
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <script src="_demogen/js/modernizr-2.0.6.min.js"></script>
+</head>
+
+<body>
+  
+  <style type="text/css">body {
+    background: #e8e8e8;
+    margin: 0px;
+}
+
+#demoCanvas {
+    position: absolute;
+    background: white;
+    
+    border: 1px solid black;
+    margin: 10px 20px 0 0;
+    right: 0;
+    z-index: 100;
+}</style>
+  
+  <style type="text/css">#editor {
+    width: 100%;
+    height: 100%;
+}</style>
+  
+  <canvas id="demoCanvas" width="300" height="300"></canvas>
+  
+
+  <script src="../interact.js"></script>
+  <script src="_demogen/js/keymaster.min.js"></script>
+  <script src="_demogen/js/jquery-1.6.2.min.js"></script>
+  <script src="_demogen/js/runner.js"></script>
+  <script>
+  var settings = {"theme":"dawn","mode":"javascript"};
+
+  
+  </script>
+  <script src="_demogen/js/ace/ace.js"></script><script src="_demogen/js/ace/theme-dawn.js"></script><script src="_demogen/js/ace/mode-javascript.js"></script><script src="_demogen/js/ace/ace.js"></script><script src="_demogen/js/ace/theme-dawn.js"></script><script src="_demogen/js/ace/mode-javascript.js"></script><script src="_demogen/js/ace/ace.js"></script><script src="_demogen/js/ace/theme-dawn.js"></script><script src="_demogen/js/ace/mode-javascript.js"></script><script src="_demogen/js/ace/ace.js"></script><script src="_demogen/js/ace/theme-dawn.js"></script><script src="_demogen/js/ace/mode-javascript.js"></script>
+  <!--[if lt IE 7 ]>
+    <script src="//ajax.googleapis.com/ajax/libs/chrome-frame/1.0.3/CFInstall.min.js"></script>
+    <script>window.attachEvent('onload',function(){CFInstall.check({mode:'overlay'})})</script>
+  <![endif]-->
+  <div id="editor">var blackHole = new Image(),
+    demoCanvas = $('#demoCanvas')[0],
+    context = demoCanvas.getContext('2d'),
+    scaling = 1,
+    imageX = 0,
+    imageY = 0;
+    
+function initImage() {
+    eve.on('interact.zoom', function(absXY, relXY, zoomAmount) {
+        scaling = Math.max(0.25, scaling + zoomAmount);
+        
+        drawImage();
+    });
+    
+    eve.on('interact.pan', function(deltaX, deltaY) {
+        imageX += deltaX;
+        imageY += deltaY;
+        
+        drawImage();
+    });    
+    
+    drawImage();
+} // initImage
+
+function drawImage() {
+    context.save();
+    context.clearRect(0, 0, demoCanvas.width, demoCanvas.height);
+    
+    try {
+        context.translate(
+            (demoCanvas.width - blackHole.width * scaling) / 2, 
+            (demoCanvas.height - blackHole.height * scaling) / 2);
+        
+        context.drawImage(
+            blackHole, 
+            imageX, 
+            imageY, 
+            blackHole.width * scaling, 
+            blackHole.height * scaling);
+    }
+    finally {
+        context.restore();
+    }
+} // drawImage
+
+// load the image
+blackHole.src = 'http://estock.s3.amazonaws.com/wwtfc1/24/88/31/estock_commonswiki_248831_o.jpg';
+blackHole.onload = initImage;
+
+// watch the demo canvas
+INTERACT.watch(demoCanvas);
+
+</div>
+<script defer="defer">
+var editor = ace.edit('editor'),
+	SelectedMode = require('ace/mode/javascript').Mode;
+
+// set the theme
+editor.setTheme("ace/theme/dawn");
+
+// set the mode
+editor.getSession().setMode(new SelectedMode());
+</script>
+  <script defer="defer">var blackHole = new Image(),
+    demoCanvas = $('#demoCanvas')[0],
+    context = demoCanvas.getContext('2d'),
+    scaling = 1,
+    imageX = 0,
+    imageY = 0;
+    
+function initImage() {
+    eve.on('interact.zoom', function(absXY, relXY, zoomAmount) {
+        scaling = Math.max(0.25, scaling + zoomAmount);
+        
+        drawImage();
+    });
+    
+    eve.on('interact.pan', function(deltaX, deltaY) {
+        imageX += deltaX;
+        imageY += deltaY;
+        
+        drawImage();
+    });    
+    
+    drawImage();
+} // initImage
+
+function drawImage() {
+    context.save();
+    context.clearRect(0, 0, demoCanvas.width, demoCanvas.height);
+    
+    try {
+        context.translate(
+            (demoCanvas.width - blackHole.width * scaling) / 2, 
+            (demoCanvas.height - blackHole.height * scaling) / 2);
+        
+        context.drawImage(
+            blackHole, 
+            imageX, 
+            imageY, 
+            blackHole.width * scaling, 
+            blackHole.height * scaling);
+    }
+    finally {
+        context.restore();
+    }
+} // drawImage
+
+// load the image
+blackHole.src = 'http://estock.s3.amazonaws.com/wwtfc1/24/88/31/estock_commonswiki_248831_o.jpg';
+blackHole.onload = initImage;
+
+// watch the demo canvas
+INTERACT.watch(demoCanvas);
+
+</script>
+</body>
+</html>

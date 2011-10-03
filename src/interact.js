@@ -1,13 +1,13 @@
+//= eve!
+
 /**
 # INTERACT
 */
 INTERACT = (function() {
     // initialise variables
-    var interactors = [];
-    
-    //= cog!extend
-    //= cog!log
-    //= cog!observable
+    var interactors = [],
+        reLastChunk = /.*\.(.*)$/,
+        lastXY = {};
     
     //= eventmonitor
     
@@ -73,47 +73,74 @@ INTERACT = (function() {
     /* exports */
     
     function register(typeName, opts) {
-        interactors.push(_extend({
-            handler: null,
-            checks: {},
-            type: typeName
-        }, opts));
+        // initialise options
+        opts = opts || {};
+        opts.checks = opts.checks || {};
+        opts.type = opts.type || typeName;
+        
+        interactors.push(opts);
     } // register
     
     /**
     ### watch(target, opts, caps)
     */
     function watch(target, opts, caps) {
-        // initialise the options
-        opts = _extend({
-            bindTarget: null,
-            observable: null,
-            isIE: typeof window.attachEvent != 'undefined',
-            types: null
-        }, opts);
+        var handlers;
         
-        // initialise the capabilities
-        capabilities = _extend({
-            touch: 'ontouchstart' in window
-        }, caps);
+        // initialise options
+        opts = opts || {};
+        opts.isIE = typeof window.attachEvent != 'undefined';
         
-        // check if we need to supply an observable object
-        if (! opts.observable) {
-            opts.observable = _observable({});
-            globalOpts = opts;
-        } // if
+        // init caps
+        caps = caps || {};
+        caps.touch = caps.touch || 'ontouchstart' in window;
         
         // initialise the binder and unbinder
         opts.binder = (opts.isIE ? genIEBinder : genBinder)(opts.bindTarget || document);
         opts.unbinder = (opts.isIE ? genIEBinder : genUnbinder)(opts.bindTarget || document);
         
-        // return the event monitor
-        return new EventMonitor(target, getHandlers(opts.types, capabilities), opts);
+        // initialise the handlers
+        handlers = getHandlers(opts.types, caps);
+        
+        for (var ii = 0; ii < handlers.length; ii++) {
+            handlers[ii].call(target, target, opts);
+        } // for
     } // watch
     
     //= interactors/pointer
     //= interactors/mouse
     //= interactors/touch
+    
+    // add some helpful wrappers
+    eve.on('interact.pointer.down', function(absXY, relXY) {
+        var ctrlName = eve.nt().replace(reLastChunk, '$1');
+        
+        if (ctrlName) {
+            lastXY[ctrlName] = {
+                x: relXY.x,
+                y: relXY.y
+            };
+        } // if
+    });    
+    
+    // handle pointer move events
+    eve.on('interact.pointer.move', function(absXY, relXY) {
+        var ctrlName = eve.nt().replace(reLastChunk, '$1');
+        
+        if (ctrlName && lastXY[ctrlName]) {
+            var deltaX = relXY.x - lastXY[ctrlName].x,
+                deltaY = relXY.y - lastXY[ctrlName].y;
+
+            // trigger the pan event
+            eve('interact.pan.' + ctrlName, this, deltaX, deltaY, absXY, relXY);
+
+            // update the last xy
+            lastXY[ctrlName] = {
+                x: relXY.x,
+                y: relXY.y
+            };
+        } // if
+    });
     
     return {
         register: register,

@@ -19,13 +19,6 @@ function getOffset(obj) {
     };
 } // getOffset
 
-function genEventProps(source, evt) {
-    return {
-        source: source,
-        target: evt.target ? evt.target : evt.srcElement
-    };
-} // genEventProps
-
 function matchTarget(evt, targetElement) {
     var targ = evt.target ? evt.target : evt.srcElement,
         targClass = targ.className;

@@ -1,8 +1,14 @@
-var TouchHandler = function(targetElement, observable, opts) {
-    opts = _extend({
-        detailed: false,
-        inertia: false
-    }, opts);
+/**
+# TouchHandler(targetElement, observable, opts)
+
+## Valid Options
+
+- detailed: boolean (default = false)
+- inertia: boolean (default = false)
+*/
+var TouchHandler = function(targetElement, opts) {
+    // initialise opts
+    opts = opts || {};
     
     // initialise constants
     var DEFAULT_INERTIA_MAX = 500,
@@ -31,7 +37,16 @@ var TouchHandler = function(targetElement, observable, opts) {
         startDistance,
         touchesLast,
         detailedEvents = opts.detailed,
-        scaling = 1;
+        scaling = 1,
+        evtPointer = 'interact.pointer',
+        evtTargetId = targetElement && targetElement.id ? '.' + targetElement.id : '',
+        evtPointerDown = evtPointer + '.down' + evtTargetId,
+        evtPointerMultiDown = evtPointer + '.multi.down' + evtTargetId,
+        evtPointerMove = evtPointer + '.move' + evtTargetId,
+        evtPointerMultiMove = evtPointer + '.multi.move' + evtTargetId,
+        evtPointerUp = evtPointer + '.up' + evtTargetId,
+        evtPointerMultiUp = evtPointer + '.multi.up' + evtTargetId,
+        evtZoomPinch = 'interact.zoom.pinch' + evtTargetId;
 
     /* internal functions */
     
@@ -134,27 +149,18 @@ var TouchHandler = function(targetElement, observable, opts) {
 
             // initialise variables
             var changedTouches = getTouchData(evt, 'changedTouches'),
-                relTouches = copyTouches(changedTouches, offset.left, offset.top);
+                relTouches = copyTouches(changedTouches, offset.left, offset.top),
+                evtArgs = [targetElement, changedTouches, relTouches];
             
             if (! touchesStart) {
                 // reset the touch mode to unknown
                 touchMode = TOUCH_MODE_TAP;
-
-                // trigger the pointer down event
-                observable.triggerCustom(
-                    'pointerDown', 
-                    genEventProps('touch', evt),
-                    changedTouches, 
-                    relTouches);
+                eve.apply(eve, [evtPointerDown].concat(evtArgs));
             } // if
             
             // if we are providing detailed events, then trigger the pointer down multi
             if (detailedEvents) {
-                observable.triggerCustom(
-                    'pointerDownMulti',
-                    genEventProps('touch', evt),
-                    changedTouches,
-                    relTouches);
+                eve.apply(eve, [evtPointerMultiDown].concat(evtArgs));
             } // if
             
             touchesStart = getTouchData(evt);
@@ -173,6 +179,8 @@ var TouchHandler = function(targetElement, observable, opts) {
     } // handleTouchStart
     
     function handleTouchMove(evt) {
+        var cancelTap, evtArgs;
+        
         if (matchTarget(evt, targetElement)) {
             // prevent the default action
             preventDefault(evt);
@@ -182,9 +190,9 @@ var TouchHandler = function(targetElement, observable, opts) {
             
             // if the touch mode is currently tap, then check the distance from the start touch
             if (touchMode == TOUCH_MODE_TAP) {
-                var cancelTap = 
-                        Math.abs(touchesStart.x - touchesCurrent.x) > MIN_MOVEDIST || 
-                        Math.abs(touchesStart.y - touchesCurrent.y) > MIN_MOVEDIST;
+                cancelTap = 
+                    Math.abs(touchesStart.x - touchesCurrent.x) > MIN_MOVEDIST || 
+                    Math.abs(touchesStart.y - touchesCurrent.y) > MIN_MOVEDIST;
 
                 // update the touch mode based on the result
                 touchMode = cancelTap ? TOUCH_MODE_UNKNOWN : TOUCH_MODE_TAP;
@@ -219,43 +227,32 @@ var TouchHandler = function(targetElement, observable, opts) {
                                 scaleChange = currentScaling - scaling;
                                 
                             // trigger the zoom event
-                            observable.triggerCustom(
-                                'zoom', 
-                                genEventProps('touch', evt),
-                                current, 
-                                pointerOffset(current, offset),
-                                scaleChange,
-                                'pinch'
-                            );
+                            eve(evtZoomPinch, targetElement, current, 
+                                pointerOffset(current, offset), scaleChange);
                             
                             // update the scaling
                             scaling = currentScaling;
                         } // if..else
                     } // if..else
                 } // if
+
+                // initialise the event args
+                evtArgs = [
+                    targetElement,
+                    touchesCurrent,
+                    copyTouches(touchesCurrent, offset.left, offset.top),
+                    point(touchesCurrent.x - touchesLast.x, touchesCurrent.y - touchesLast.y)
+                ];
                 
                 // if the touch mode is move, then trigger a pointer move on the first touch
                 if (touchMode == TOUCH_MODE_MOVE) {
                     // trigger the pointer move event
-                    observable.triggerCustom(
-                        'pointerMove',
-                        genEventProps('touch', evt),
-                        touchesCurrent,
-                        copyTouches(touchesCurrent, offset.left, offset.top),
-                        point(
-                            touchesCurrent.x - touchesLast.x, 
-                            touchesCurrent.y - touchesLast.y)
-                    );
+                    eve.apply(eve, [evtPointerMove].concat(evtArgs));
                 } // if
                 
                 // fire a touch multi event for custom event handling
                 if (detailedEvents) {
-                    observable.triggerCustom(
-                        'pointerMoveMulti', 
-                        genEventProps('touch', evt),
-                        touchesCurrent, 
-                        copyTouches(touchesCurrent, offset.left, offset.top)
-                    );
+                    eve.apply(eve, [evePointerMultiMove].concat(evtArgs));
                 } // if
             } // if
             
@@ -266,33 +263,21 @@ var TouchHandler = function(targetElement, observable, opts) {
     function handleTouchEnd(evt) {
         if (matchTarget(evt, targetElement)) {
             var changedTouches = getTouchData(evt, 'changedTouches'),
-                offsetTouches = copyTouches(changedTouches, offset.left, offset.top);
+                offsetTouches = copyTouches(changedTouches, offset.left, offset.top),
+                evtArgs = [targetElement, changedTouches, offsetTouches];
             
             // get the current touches
             touchesCurrent = getTouchData(evt);
             
             // if this is the last touch to be removed do some extra checks
             if (! touchesCurrent) {
-                // trigger the pointer up
-                observable.triggerCustom(
-                    'pointerUp',
-                    genEventProps('touch', evt),
-                    changedTouches,
-                    offsetTouches
-                );
-
+                eve.apply(eve, [evtPointerUp].concat(evtArgs));
                 touchesStart = null;
             } // if
             
             // if we are monitoring detailed events, then trigger up multi
             if (detailedEvents) {
-                // trigger the pointer up
-                observable.triggerCustom(
-                    'pointerUpMulti',
-                    genEventProps('touch', evt),
-                    changedTouches,
-                    offsetTouches
-                );
+                eve.apply(evt, [evtPointerMultiUp].concat(evtArgs));
             } // if..else
         } // if
     } // handleTouchEnd

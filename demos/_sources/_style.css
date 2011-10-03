@@ -1,0 +1,14 @@
+body {
+    background: #e8e8e8;
+    margin: 0px;
+}
+
+#demoCanvas {
+    position: absolute;
+    background: white;
+    
+    border: 1px solid black;
+    margin: 10px 20px 0 0;
+    right: 0;
+    z-index: 100;
+}

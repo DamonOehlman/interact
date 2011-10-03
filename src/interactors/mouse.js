@@ -1,6 +1,6 @@
-var MouseHandler = function(targetElement, observable, opts) {
-    opts = _extend({
-    }, opts);
+var MouseHandler = function(targetElement, opts) {
+    // initialise opts
+    opts = opts || {};
     
     // initialise constants
     var WHEEL_DELTA_STEP = 120,
@@ -13,8 +13,12 @@ var MouseHandler = function(targetElement, observable, opts) {
         start,
         currentX,
         currentY,
-        lastX,
-        lastY;
+        evtPointer = 'interact.pointer',
+        evtTargetId = targetElement && targetElement.id ? '.' + targetElement.id : '',
+        evtPointerDown = evtPointer + '.down' + evtTargetId,
+        evtPointerMove = evtPointer + '.move' + evtTargetId,
+        evtPointerUp = evtPointer + '.up' + evtTargetId,
+        evtZoomWheel = 'interact.zoom.wheel' + evtTargetId;
     
     /* internal functions */
     
@@ -43,9 +47,9 @@ var MouseHandler = function(targetElement, observable, opts) {
         if (matchTarget(evt, targetElement)) {
             var clickXY = getPagePos(evt);
             
-            observable.triggerCustom(
-                'doubleTap', 
-                genEventProps('mouse', evt),
+            eve(
+                'interact.doubleTap' + evtTargetId,
+                targetElement,
                 clickXY, 
                 pointerOffset(clickXY, getOffset(targetElement))
             );
@@ -63,14 +67,12 @@ var MouseHandler = function(targetElement, observable, opts) {
                 targetElement.style.cursor = 'move';
                 preventDefault(evt, true);
                 
-                lastX = pagePos.x; 
-                lastY = pagePos.y;
-                start = point(lastX, lastY);
+                start = point(pagePos.x, pagePos.y);
                 
                 // trigger the pointer down event
-                observable.triggerCustom(
-                    'pointerDown', 
-                    genEventProps('mouse', evt),
+                eve(
+                    evtPointerDown, 
+                    targetElement,
                     start, 
                     pointerOffset(start, getOffset(targetElement))
                 );
@@ -86,7 +88,7 @@ var MouseHandler = function(targetElement, observable, opts) {
         currentY = pagePos.y;
         
         if (matchTarget(evt, targetElement)) {
-            triggerCurrent(evt, buttonDown ? 'pointerMove' : 'pointerHover');
+            triggerCurrent(evt, 'interact.pointer.'+ (buttonDown ? 'move' : 'hover'));
         } // if
     } // mouseMove
 
@@ -97,7 +99,7 @@ var MouseHandler = function(targetElement, observable, opts) {
             // if the button was released on this element, then trigger the event
             if (matchTarget(evt, targetElement)) {
                 targetElement.style.cursor = 'default';
-                triggerCurrent(evt, 'pointerUp');
+                triggerCurrent(evt, 'interact.pointer.up');
             } // if
         } // if
     } // mouseUp
@@ -124,13 +126,12 @@ var MouseHandler = function(targetElement, observable, opts) {
             if (deltaY) {
                 var current = point(currentX, currentY);
                 
-                observable.triggerCustom(
-                    'zoom', 
-                    genEventProps('mouse', evt),
+                eve(
+                    evtZoomWheel,
+                    targetElement,
                     current, 
                     pointerOffset(current, getOffset(targetElement)),
-                    deltaY / WHEEL_DELTA_LEVEL,
-                    'wheel'
+                    deltaY / WHEEL_DELTA_LEVEL
                 );
                 
                 preventDefault(evt); 
@@ -152,24 +153,15 @@ var MouseHandler = function(targetElement, observable, opts) {
     function triggerCurrent(evt, eventName, overrideX, overrideY, updateLast) {
         var evtX = typeof overrideX != 'undefined' ? overrideX : currentX,
             evtY = typeof overrideY != 'undefined' ? overrideY : currentY,
-            deltaX = evtX - lastX,
-            deltaY = evtY - lastY,
             current = point(evtX, evtY);
             
         // trigger the event
-        observable.triggerCustom(
-            eventName, 
-            genEventProps('mouse', evt),
+        eve(
+            eventName + evtTargetId,
+            targetElement,
             current,
-            pointerOffset(current, getOffset(targetElement)),
-            point(deltaX, deltaY)
+            pointerOffset(current, getOffset(targetElement))
         );
-        
-        // if we should update the last x and y, then do that now
-        if (typeof updateLast == 'undefined' || updateLast) {
-            lastX = evtX;
-            lastY = evtY;
-        } // if
     } // triggerCurrent
 
     /* exports */
