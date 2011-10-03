@@ -54,34 +54,11 @@
     <script src="//ajax.googleapis.com/ajax/libs/chrome-frame/1.0.3/CFInstall.min.js"></script>
     <script>window.attachEvent('onload',function(){CFInstall.check({mode:'overlay'})})</script>
   <![endif]-->
-  <div id="editor">var blackHole = new Image(),
-    demoCanvas = $('#demoCanvas')[0],
-    context = demoCanvas.getContext('2d'),
-    imageX = 0,
-    imageY = 0;
-    
-function initImage() {
-    imageX = -(this.width - demoCanvas.width) / 2;
-    imageY = -(this.height - demoCanvas.height) / 2;
-    
-    eve.on('interact.pan', function(deltaX, deltaY) {
-        imageX += deltaX;
-        imageY += deltaY;
-        
-        drawImage();
-    });
-    
-    drawImage();
-} // initImage
+  <div id="editor">var demoCanvas = $('#demoCanvas')[0],
+    context = demoCanvas.getContext('2d');
 
-function drawImage() {
-    context.clearRect(0, 0, demoCanvas.width, demoCanvas.height);
-    context.drawImage(blackHole, imageX, imageY);
-} // drawImage
-
-// load the image
-blackHole.src = 'http://estock.s3.amazonaws.com/wwtfc1/24/88/31/estock_commonswiki_248831_o.jpg';
-blackHole.onload = initImage;
+eve.on('interact.tap', function(absXY, relXY) {
+});
 
 INTERACT.watch(demoCanvas);
 
@@ -96,34 +73,11 @@ editor.setTheme("ace/theme/dawn");
 // set the mode
 editor.getSession().setMode(new SelectedMode());
 </script>
-  <script defer="defer">var blackHole = new Image(),
-    demoCanvas = $('#demoCanvas')[0],
-    context = demoCanvas.getContext('2d'),
-    imageX = 0,
-    imageY = 0;
-    
-function initImage() {
-    imageX = -(this.width - demoCanvas.width) / 2;
-    imageY = -(this.height - demoCanvas.height) / 2;
-    
-    eve.on('interact.pan', function(deltaX, deltaY) {
-        imageX += deltaX;
-        imageY += deltaY;
-        
-        drawImage();
-    });
-    
-    drawImage();
-} // initImage
+  <script defer="defer">var demoCanvas = $('#demoCanvas')[0],
+    context = demoCanvas.getContext('2d');
 
-function drawImage() {
-    context.clearRect(0, 0, demoCanvas.width, demoCanvas.height);
-    context.drawImage(blackHole, imageX, imageY);
-} // drawImage
-
-// load the image
-blackHole.src = 'http://estock.s3.amazonaws.com/wwtfc1/24/88/31/estock_commonswiki_248831_o.jpg';
-blackHole.onload = initImage;
+eve.on('interact.tap', function(absXY, relXY) {
+});
 
 INTERACT.watch(demoCanvas);
 

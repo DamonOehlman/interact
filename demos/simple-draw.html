@@ -49,7 +49,7 @@
 
   
   </script>
-  <script src="_demogen/js/ace/ace.js"></script><script src="_demogen/js/ace/theme-dawn.js"></script><script src="_demogen/js/ace/mode-javascript.js"></script><script src="_demogen/js/ace/ace.js"></script><script src="_demogen/js/ace/theme-dawn.js"></script><script src="_demogen/js/ace/mode-javascript.js"></script><script src="_demogen/js/ace/ace.js"></script><script src="_demogen/js/ace/theme-dawn.js"></script><script src="_demogen/js/ace/mode-javascript.js"></script><script src="_demogen/js/ace/ace.js"></script><script src="_demogen/js/ace/theme-dawn.js"></script><script src="_demogen/js/ace/mode-javascript.js"></script>
+  <script src="_demogen/js/ace/ace.js"></script><script src="_demogen/js/ace/theme-dawn.js"></script><script src="_demogen/js/ace/mode-javascript.js"></script><script src="_demogen/js/ace/ace.js"></script><script src="_demogen/js/ace/theme-dawn.js"></script><script src="_demogen/js/ace/mode-javascript.js"></script><script src="_demogen/js/ace/ace.js"></script><script src="_demogen/js/ace/theme-dawn.js"></script><script src="_demogen/js/ace/mode-javascript.js"></script><script src="_demogen/js/ace/ace.js"></script><script src="_demogen/js/ace/theme-dawn.js"></script><script src="_demogen/js/ace/mode-javascript.js"></script><script src="_demogen/js/ace/ace.js"></script><script src="_demogen/js/ace/theme-dawn.js"></script><script src="_demogen/js/ace/mode-javascript.js"></script>
   <!--[if lt IE 7 ]>
     <script src="//ajax.googleapis.com/ajax/libs/chrome-frame/1.0.3/CFInstall.min.js"></script>
     <script>window.attachEvent('onload',function(){CFInstall.check({mode:'overlay'})})</script>
@@ -63,17 +63,17 @@ eve.on('interact.pointer.down', function(absXY, relXY) {
 });
 
 // handle pointer move events
-eve.on('interact.pointer.move', function(absXY, relXY, deltaXY) {
+eve.on('interact.pointer.move', function(absXY, relXY) {
     context.lineTo(relXY.x, relXY.y);
     context.stroke();
 });
 
 // handle pointer up events
-eve.on('interact.pointer.up', function(absXY, relXY, deltaXY) {
+eve.on('interact.pointer.up', function(absXY, relXY) {
     context.closePath();
 });
 
-INTERACT.watch(demoCanvas);
+INTERACT.watch('demoCanvas');
 
 </div>
 <script defer="defer">
@@ -95,17 +95,17 @@ eve.on('interact.pointer.down', function(absXY, relXY) {
 });
 
 // handle pointer move events
-eve.on('interact.pointer.move', function(absXY, relXY, deltaXY) {
+eve.on('interact.pointer.move', function(absXY, relXY) {
     context.lineTo(relXY.x, relXY.y);
     context.stroke();
 });
 
 // handle pointer up events
-eve.on('interact.pointer.up', function(absXY, relXY, deltaXY) {
+eve.on('interact.pointer.up', function(absXY, relXY) {
     context.closePath();
 });
 
-INTERACT.watch(demoCanvas);
+INTERACT.watch('demoCanvas');
 
 </script>
 </body>

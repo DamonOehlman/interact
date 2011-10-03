@@ -7,14 +7,14 @@ eve.on('interact.pointer.down', function(absXY, relXY) {
 });
 
 // handle pointer move events
-eve.on('interact.pointer.move', function(absXY, relXY, deltaXY) {
+eve.on('interact.pointer.move', function(absXY, relXY) {
     context.lineTo(relXY.x, relXY.y);
     context.stroke();
 });
 
 // handle pointer up events
-eve.on('interact.pointer.up', function(absXY, relXY, deltaXY) {
+eve.on('interact.pointer.up', function(absXY, relXY) {
     context.closePath();
 });
 
-INTERACT.watch(demoCanvas);
+INTERACT.watch('demoCanvas');

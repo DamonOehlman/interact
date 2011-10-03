@@ -1,15 +1,13 @@
 //= eve!
 
-/**
-# INTERACT
-*/
+// Interact 0.3.0 - Mouse and Touch Handling
+// Copyright (c) 2010-2011 Damon Oehlman (damon.oehlman -at- sidelab.com)
+// Licensed under the MIT (http://www.opensource.org/licenses/mit-license.php) license
 INTERACT = (function() {
     // initialise variables
     var interactors = [],
         reLastChunk = /.*\.(.*)$/,
         lastXY = {};
-    
-    //= eventmonitor
     
     /* internal functions */
     
@@ -87,6 +85,11 @@ INTERACT = (function() {
     function watch(target, opts, caps) {
         var handlers;
         
+        // if the target is a string, then look for the element
+        if (typeof target == 'string') {
+            target = document.getElementById(target);
+        } // if
+        
         // initialise options
         opts = opts || {};
         opts.isIE = typeof window.attachEvent != 'undefined';
@@ -121,6 +124,9 @@ INTERACT = (function() {
                 y: relXY.y
             };
         } // if
+        
+        // save the down target
+        downTarget = this;
     });    
     
     // handle pointer move events
@@ -139,6 +145,14 @@ INTERACT = (function() {
                 x: relXY.x,
                 y: relXY.y
             };
+        } // if
+    });
+    
+    eve.on('interact.pointer.up', function(absXY, relXY) {
+        var ctrlName = eve.nt().replace(reLastChunk, '$1');
+        
+        if (this === downTarget) {
+            eve('interact.tap' + (ctrlName ? '.' + ctrlName : ''), this, absXY, relXY);
         } // if
     });
     
