@@ -4,6 +4,8 @@ Interact is essentially a wrapper on top of touch and mouse events.  It exists t
 
 Events are distributed using [eve](https://github.com/DmitryBaranovskiy/eve).
 
+_Interact is distributed under an [MIT License](http://www.opensource.org/licenses/mit-license.php)_
+
 ## Example Usage
 
 Handling simple down, move, and up events is easy:
