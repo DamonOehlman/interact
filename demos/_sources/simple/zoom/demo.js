@@ -6,13 +6,13 @@ var blackHole = new Image(),
     imageY = 0;
     
 function initImage() {
-    eve.on('interact.zoom', function(absXY, relXY, zoomAmount) {
+    eve.on('interact.zoom', function(evt, absXY, relXY, zoomAmount) {
         scaling = Math.max(0.25, scaling + zoomAmount);
         
         drawImage();
     });
     
-    eve.on('interact.pan', function(deltaX, deltaY) {
+    eve.on('interact.pan', function(evt, deltaX, deltaY) {
         imageX += deltaX;
         imageY += deltaY;
         

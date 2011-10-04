@@ -1,5 +1,5 @@
 /**
-# TouchHandler(targetElement, observable, opts)
+# TouchHandler(targetElement, opts)
 
 ## Valid Options
 
@@ -150,7 +150,7 @@ var TouchHandler = function(targetElement, opts) {
             // initialise variables
             var changedTouches = getTouchData(evt, 'changedTouches'),
                 relTouches = copyTouches(changedTouches, offset.left, offset.top),
-                evtArgs = [targetElement, changedTouches, relTouches];
+                evtArgs = [targetElement, evt, changedTouches, relTouches];
             
             if (! touchesStart) {
                 // reset the touch mode to unknown
@@ -227,7 +227,7 @@ var TouchHandler = function(targetElement, opts) {
                                 scaleChange = currentScaling - scaling;
                                 
                             // trigger the zoom event
-                            eve(evtZoomPinch, targetElement, current, 
+                            eve(evtZoomPinch, targetElement, evt, current, 
                                 pointerOffset(current, offset), scaleChange);
                             
                             // update the scaling
@@ -239,6 +239,7 @@ var TouchHandler = function(targetElement, opts) {
                 // initialise the event args
                 evtArgs = [
                     targetElement,
+                    evt,
                     touchesCurrent,
                     copyTouches(touchesCurrent, offset.left, offset.top),
                     point(touchesCurrent.x - touchesLast.x, touchesCurrent.y - touchesLast.y)
@@ -264,7 +265,7 @@ var TouchHandler = function(targetElement, opts) {
         if (matchTarget(evt, targetElement)) {
             var changedTouches = getTouchData(evt, 'changedTouches'),
                 offsetTouches = copyTouches(changedTouches, offset.left, offset.top),
-                evtArgs = [targetElement, changedTouches, offsetTouches];
+                evtArgs = [targetElement, evt, changedTouches, offsetTouches];
             
             // get the current touches
             touchesCurrent = getTouchData(evt);

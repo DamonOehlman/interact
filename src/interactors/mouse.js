@@ -50,6 +50,7 @@ var MouseHandler = function(targetElement, opts) {
             eve(
                 'interact.doubleTap' + evtTargetId,
                 targetElement,
+                evt,
                 clickXY, 
                 pointerOffset(clickXY, getOffset(targetElement))
             );
@@ -73,6 +74,7 @@ var MouseHandler = function(targetElement, opts) {
                 eve(
                     evtPointerDown, 
                     targetElement,
+                    evt,
                     start, 
                     pointerOffset(start, getOffset(targetElement))
                 );
@@ -129,6 +131,7 @@ var MouseHandler = function(targetElement, opts) {
                 eve(
                     evtZoomWheel,
                     targetElement,
+                    evt,
                     current, 
                     pointerOffset(current, getOffset(targetElement)),
                     deltaY / WHEEL_DELTA_LEVEL
@@ -159,6 +162,7 @@ var MouseHandler = function(targetElement, opts) {
         eve(
             eventName + evtTargetId,
             targetElement,
+            evt,
             current,
             pointerOffset(current, getOffset(targetElement))
         );

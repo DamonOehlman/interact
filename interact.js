@@ -501,6 +501,7 @@ INTERACT = (function() {
                 eve(
                     'interact.doubleTap' + evtTargetId,
                     targetElement,
+                    evt,
                     clickXY, 
                     pointerOffset(clickXY, getOffset(targetElement))
                 );
@@ -524,6 +525,7 @@ INTERACT = (function() {
                     eve(
                         evtPointerDown, 
                         targetElement,
+                        evt,
                         start, 
                         pointerOffset(start, getOffset(targetElement))
                     );
@@ -580,6 +582,7 @@ INTERACT = (function() {
                     eve(
                         evtZoomWheel,
                         targetElement,
+                        evt,
                         current, 
                         pointerOffset(current, getOffset(targetElement)),
                         deltaY / WHEEL_DELTA_LEVEL
@@ -610,6 +613,7 @@ INTERACT = (function() {
             eve(
                 eventName + evtTargetId,
                 targetElement,
+                evt,
                 current,
                 pointerOffset(current, getOffset(targetElement))
             );
@@ -656,7 +660,7 @@ INTERACT = (function() {
     });
 
     /**
-    # TouchHandler(targetElement, observable, opts)
+    # TouchHandler(targetElement, opts)
     
     ## Valid Options
     
@@ -807,7 +811,7 @@ INTERACT = (function() {
                 // initialise variables
                 var changedTouches = getTouchData(evt, 'changedTouches'),
                     relTouches = copyTouches(changedTouches, offset.left, offset.top),
-                    evtArgs = [targetElement, changedTouches, relTouches];
+                    evtArgs = [targetElement, evt, changedTouches, relTouches];
                 
                 if (! touchesStart) {
                     // reset the touch mode to unknown
@@ -884,7 +888,7 @@ INTERACT = (function() {
                                     scaleChange = currentScaling - scaling;
                                     
                                 // trigger the zoom event
-                                eve(evtZoomPinch, targetElement, current, 
+                                eve(evtZoomPinch, targetElement, evt, current, 
                                     pointerOffset(current, offset), scaleChange);
                                 
                                 // update the scaling
@@ -896,6 +900,7 @@ INTERACT = (function() {
                     // initialise the event args
                     evtArgs = [
                         targetElement,
+                        evt,
                         touchesCurrent,
                         copyTouches(touchesCurrent, offset.left, offset.top),
                         point(touchesCurrent.x - touchesLast.x, touchesCurrent.y - touchesLast.y)
@@ -921,7 +926,7 @@ INTERACT = (function() {
             if (matchTarget(evt, targetElement)) {
                 var changedTouches = getTouchData(evt, 'changedTouches'),
                     offsetTouches = copyTouches(changedTouches, offset.left, offset.top),
-                    evtArgs = [targetElement, changedTouches, offsetTouches];
+                    evtArgs = [targetElement, evt, changedTouches, offsetTouches];
                 
                 // get the current touches
                 touchesCurrent = getTouchData(evt);
@@ -975,7 +980,7 @@ INTERACT = (function() {
 
     
     // add some helpful wrappers
-    eve.on('interact.pointer.down', function(absXY, relXY) {
+    eve.on('interact.pointer.down', function(evt, absXY, relXY) {
         var ctrlName = eve.nt().replace(reLastChunk, '$1');
         
         if (ctrlName) {
@@ -990,7 +995,7 @@ INTERACT = (function() {
     });    
     
     // handle pointer move events
-    eve.on('interact.pointer.move', function(absXY, relXY) {
+    eve.on('interact.pointer.move', function(evt, absXY, relXY) {
         var ctrlName = eve.nt().replace(reLastChunk, '$1');
         
         if (ctrlName && lastXY[ctrlName]) {
@@ -998,7 +1003,7 @@ INTERACT = (function() {
                 deltaY = relXY.y - lastXY[ctrlName].y;
 
             // trigger the pan event
-            eve('interact.pan.' + ctrlName, this, deltaX, deltaY, absXY, relXY);
+            eve('interact.pan.' + ctrlName, this, evt, deltaX, deltaY, absXY, relXY);
 
             // update the last xy
             lastXY[ctrlName] = {
@@ -1008,11 +1013,11 @@ INTERACT = (function() {
         } // if
     });
     
-    eve.on('interact.pointer.up', function(absXY, relXY) {
+    eve.on('interact.pointer.up', function(evt, absXY, relXY) {
         var ctrlName = eve.nt().replace(reLastChunk, '$1');
         
         if (this === downTarget) {
-            eve('interact.tap' + (ctrlName ? '.' + ctrlName : ''), this, absXY, relXY);
+            eve('interact.tap' + (ctrlName ? '.' + ctrlName : ''), this, evt, absXY, relXY);
         } // if
     });
     

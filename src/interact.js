@@ -115,7 +115,7 @@ INTERACT = (function() {
     //= interactors/touch
     
     // add some helpful wrappers
-    eve.on('interact.pointer.down', function(absXY, relXY) {
+    eve.on('interact.pointer.down', function(evt, absXY, relXY) {
         var ctrlName = eve.nt().replace(reLastChunk, '$1');
         
         if (ctrlName) {
@@ -130,7 +130,7 @@ INTERACT = (function() {
     });    
     
     // handle pointer move events
-    eve.on('interact.pointer.move', function(absXY, relXY) {
+    eve.on('interact.pointer.move', function(evt, absXY, relXY) {
         var ctrlName = eve.nt().replace(reLastChunk, '$1');
         
         if (ctrlName && lastXY[ctrlName]) {
@@ -138,7 +138,7 @@ INTERACT = (function() {
                 deltaY = relXY.y - lastXY[ctrlName].y;
 
             // trigger the pan event
-            eve('interact.pan.' + ctrlName, this, deltaX, deltaY, absXY, relXY);
+            eve('interact.pan.' + ctrlName, this, evt, deltaX, deltaY, absXY, relXY);
 
             // update the last xy
             lastXY[ctrlName] = {
@@ -148,11 +148,11 @@ INTERACT = (function() {
         } // if
     });
     
-    eve.on('interact.pointer.up', function(absXY, relXY) {
+    eve.on('interact.pointer.up', function(evt, absXY, relXY) {
         var ctrlName = eve.nt().replace(reLastChunk, '$1');
         
         if (this === downTarget) {
-            eve('interact.tap' + (ctrlName ? '.' + ctrlName : ''), this, absXY, relXY);
+            eve('interact.tap' + (ctrlName ? '.' + ctrlName : ''), this, evt, absXY, relXY);
         } // if
     });
     

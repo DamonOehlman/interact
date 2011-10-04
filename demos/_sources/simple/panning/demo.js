@@ -8,7 +8,7 @@ function initImage() {
     imageX = -(this.width - demoCanvas.width) / 2;
     imageY = -(this.height - demoCanvas.height) / 2;
     
-    eve.on('interact.pan', function(deltaX, deltaY) {
+    eve.on('interact.pan', function(evt, deltaX, deltaY) {
         imageX += deltaX;
         imageY += deltaY;
         
