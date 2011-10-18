@@ -499,7 +499,7 @@ INTERACT = (function() {
                 var clickXY = getPagePos(evt);
                 
                 eve(
-                    'interact.doubleTap' + evtTargetId,
+                    'interact.doubletap' + evtTargetId,
                     targetElement,
                     evt,
                     clickXY, 
@@ -1026,3 +1026,4 @@ INTERACT = (function() {
         watch: watch
     };
 })();
+

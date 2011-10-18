@@ -48,7 +48,7 @@ var MouseHandler = function(targetElement, opts) {
             var clickXY = getPagePos(evt);
             
             eve(
-                'interact.doubleTap' + evtTargetId,
+                'interact.doubletap' + evtTargetId,
                 targetElement,
                 evt,
                 clickXY, 
