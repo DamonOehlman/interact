@@ -7,7 +7,8 @@ var MouseHandler = function(targetElement, opts) {
         WHEEL_DELTA_LEVEL = WHEEL_DELTA_STEP * 8;
     
     // initialise variables
-    var ignoreButton = opts.isIE,
+    var aggressiveCapture = opts.aggressiveCapture,
+        ignoreButton = opts.isIE,
         isFlashCanvas = typeof FlashCanvas != 'undefined',
         buttonDown = false,
         start,
@@ -66,7 +67,9 @@ var MouseHandler = function(targetElement, opts) {
                 
                 // update the cursor and prevent the default
                 targetElement.style.cursor = 'move';
-                preventDefault(evt, true);
+                if (aggressiveCapture) {
+                    preventDefault(evt, true);
+                }
                 
                 start = point(pagePos.x, pagePos.y);
                 
@@ -137,7 +140,10 @@ var MouseHandler = function(targetElement, opts) {
                     deltaY / WHEEL_DELTA_LEVEL
                 );
                 
-                preventDefault(evt); 
+                if (aggressiveCapture) {
+                    preventDefault(evt, true);
+                }
+
                 evt.returnValue = false;
             } // if
         } // if
@@ -158,6 +164,10 @@ var MouseHandler = function(targetElement, opts) {
             evtY = typeof overrideY != 'undefined' ? overrideY : currentY,
             current = point(evtX, evtY);
             
+        if (aggressiveCapture) {
+            preventDefault(evt, true);
+        }
+        
         // trigger the event
         eve(
             eventName + evtTargetId,

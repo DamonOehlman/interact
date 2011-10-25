@@ -29,7 +29,8 @@ var TouchHandler = function(targetElement, opts) {
         TOUCH_MODE_PINCH = 3;    
     
     // initialise variables
-    var offset,
+    var aggressiveCapture = opts.aggressiveCapture,
+        offset,
         touchMode,
         touchDown = false,
         touchesStart,
@@ -152,6 +153,11 @@ var TouchHandler = function(targetElement, opts) {
                 relTouches = copyTouches(changedTouches, offset.left, offset.top),
                 evtArgs = [targetElement, evt, changedTouches, relTouches];
             
+            // prevent the default action
+            if (aggressiveCapture) {
+                preventDefault(evt, true);
+            }
+
             if (! touchesStart) {
                 // reset the touch mode to unknown
                 touchMode = TOUCH_MODE_TAP;
@@ -183,8 +189,10 @@ var TouchHandler = function(targetElement, opts) {
         
         if (matchTarget(evt, targetElement)) {
             // prevent the default action
-            preventDefault(evt);
-            
+            if (aggressiveCapture) {
+                preventDefault(evt, true);
+            }
+
             // fill the touch data
             touchesCurrent = getTouchData(evt);
             
@@ -270,6 +278,11 @@ var TouchHandler = function(targetElement, opts) {
             // get the current touches
             touchesCurrent = getTouchData(evt);
             
+            // prevent the default action
+            if (aggressiveCapture) {
+                preventDefault(evt, true);
+            }
+
             // if this is the last touch to be removed do some extra checks
             if (! touchesCurrent) {
                 eve.apply(eve, [evtPointerUp].concat(evtArgs));

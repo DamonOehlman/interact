@@ -286,7 +286,7 @@
 // Interact 0.3.0 - Mouse and Touch Handling
 // Copyright (c) 2010-2011 Damon Oehlman (damon.oehlman -at- sidelab.com)
 // Licensed under the MIT (http://www.opensource.org/licenses/mit-license.php) license
-INTERACT = (function() {
+var Interact = INTERACT = (function() {
     // initialise variables
     var interactors = [],
         reLastChunk = /.*\.(.*)$/,
@@ -353,6 +353,17 @@ INTERACT = (function() {
     
     /* exports */
     
+    /*\
+     * Interact.register
+     [ function ]
+     **
+     * Register an interaction handler
+     **
+     > Arguments
+     **
+     - typeName (string) the name of the interaction handler being registered
+     - opts (object) an object containing options for the new interactor
+    \*/
     function register(typeName, opts) {
         // initialise options
         opts = opts || {};
@@ -362,9 +373,18 @@ INTERACT = (function() {
         interactors.push(opts);
     } // register
     
-    /**
-    ### watch(target, opts, caps)
-    */
+    /*\
+     * Interact.watch
+     [ function ]
+     **
+     * Watch a particular DOM element for interaction events
+     **
+     > Arguments
+     **
+     - target (DOMElement) the element in the DOM to monitor for events
+     - opts (object) any specific capture options
+     - caps (object) device capability overrides
+    \*/
     function watch(target, opts, caps) {
         var handlers;
         
@@ -458,7 +478,8 @@ INTERACT = (function() {
             WHEEL_DELTA_LEVEL = WHEEL_DELTA_STEP * 8;
         
         // initialise variables
-        var ignoreButton = opts.isIE,
+        var aggressiveCapture = opts.aggressiveCapture,
+            ignoreButton = opts.isIE,
             isFlashCanvas = typeof FlashCanvas != 'undefined',
             buttonDown = false,
             start,
@@ -517,7 +538,9 @@ INTERACT = (function() {
                     
                     // update the cursor and prevent the default
                     targetElement.style.cursor = 'move';
-                    preventDefault(evt, true);
+                    if (aggressiveCapture) {
+                        preventDefault(evt, true);
+                    }
                     
                     start = point(pagePos.x, pagePos.y);
                     
@@ -588,7 +611,10 @@ INTERACT = (function() {
                         deltaY / WHEEL_DELTA_LEVEL
                     );
                     
-                    preventDefault(evt); 
+                    if (aggressiveCapture) {
+                        preventDefault(evt, true);
+                    }
+    
                     evt.returnValue = false;
                 } // if
             } // if
@@ -609,6 +635,10 @@ INTERACT = (function() {
                 evtY = typeof overrideY != 'undefined' ? overrideY : currentY,
                 current = point(evtX, evtY);
                 
+            if (aggressiveCapture) {
+                preventDefault(evt, true);
+            }
+            
             // trigger the event
             eve(
                 eventName + evtTargetId,
@@ -690,7 +720,8 @@ INTERACT = (function() {
             TOUCH_MODE_PINCH = 3;    
         
         // initialise variables
-        var offset,
+        var aggressiveCapture = opts.aggressiveCapture,
+            offset,
             touchMode,
             touchDown = false,
             touchesStart,
@@ -813,6 +844,11 @@ INTERACT = (function() {
                     relTouches = copyTouches(changedTouches, offset.left, offset.top),
                     evtArgs = [targetElement, evt, changedTouches, relTouches];
                 
+                // prevent the default action
+                if (aggressiveCapture) {
+                    preventDefault(evt, true);
+                }
+    
                 if (! touchesStart) {
                     // reset the touch mode to unknown
                     touchMode = TOUCH_MODE_TAP;
@@ -844,8 +880,10 @@ INTERACT = (function() {
             
             if (matchTarget(evt, targetElement)) {
                 // prevent the default action
-                preventDefault(evt);
-                
+                if (aggressiveCapture) {
+                    preventDefault(evt, true);
+                }
+    
                 // fill the touch data
                 touchesCurrent = getTouchData(evt);
                 
@@ -931,6 +969,11 @@ INTERACT = (function() {
                 // get the current touches
                 touchesCurrent = getTouchData(evt);
                 
+                // prevent the default action
+                if (aggressiveCapture) {
+                    preventDefault(evt, true);
+                }
+    
                 // if this is the last touch to be removed do some extra checks
                 if (! touchesCurrent) {
                     eve.apply(eve, [evtPointerUp].concat(evtArgs));

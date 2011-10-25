@@ -1,7 +1,7 @@
 // Interact 0.3.0 - Mouse and Touch Handling
 // Copyright (c) 2010-2011 Damon Oehlman (damon.oehlman -at- sidelab.com)
 // Licensed under the MIT (http://www.opensource.org/licenses/mit-license.php) license
-INTERACT = (function() {
+var Interact = INTERACT = (function() {
     // initialise variables
     var interactors = [],
         reLastChunk = /.*\.(.*)$/,
@@ -68,6 +68,17 @@ INTERACT = (function() {
     
     /* exports */
     
+    /*\
+     * Interact.register
+     [ function ]
+     **
+     * Register an interaction handler
+     **
+     > Arguments
+     **
+     - typeName (string) the name of the interaction handler being registered
+     - opts (object) an object containing options for the new interactor
+    \*/
     function register(typeName, opts) {
         // initialise options
         opts = opts || {};
@@ -77,9 +88,18 @@ INTERACT = (function() {
         interactors.push(opts);
     } // register
     
-    /**
-    ### watch(target, opts, caps)
-    */
+    /*\
+     * Interact.watch
+     [ function ]
+     **
+     * Watch a particular DOM element for interaction events
+     **
+     > Arguments
+     **
+     - target (DOMElement) the element in the DOM to monitor for events
+     - opts (object) any specific capture options
+     - caps (object) device capability overrides
+    \*/
     function watch(target, opts, caps) {
         var handlers;
         
