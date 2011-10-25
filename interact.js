@@ -532,16 +532,15 @@ var Interact = INTERACT = (function() {
         function handleMouseDown(evt) {
             if (matchTarget(evt, targetElement)) {
                 buttonDown = isLeftButton(evt);
+                if (aggressiveCapture) {
+                    preventDefault(evt, true);
+                }
                 
                 if (buttonDown) {
                     var pagePos = getPagePos(evt);
                     
                     // update the cursor and prevent the default
                     targetElement.style.cursor = 'move';
-                    if (aggressiveCapture) {
-                        preventDefault(evt, true);
-                    }
-                    
                     start = point(pagePos.x, pagePos.y);
                     
                     // trigger the pointer down event
