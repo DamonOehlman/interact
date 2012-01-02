@@ -1,8 +1,8 @@
 CWD=`pwd`
 
 build:
-	@interleave -o interact.js src/interact.js
-	
+	@interleave src --after uglify
+
 test:
 	# node test/db.js
 

@@ -1,0 +1,28 @@
+{
+  "name": "interact",
+  "description": "Pointer Events Abstraction",
+  "author": "Damon Oehlman <damon.oehlman@sidelab.com>",
+  "tags": [
+    "mouse",
+    "touch",
+    "pointer"
+  ],
+  "version": "0.3.1",
+  "main": "./interact.js",
+  "engines": {
+    "node": ">= 0.4.x < 0.7.0"
+  },
+  "dependencies": {
+  },
+  "devDependencies": {
+    "interleave": ">= 0.1.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/DamonOehlman/interact.git"
+  },
+  "bugs": {
+    "url": "http://github.com/DamonOehlman/interact/issues"
+  },
+  "contributors": []
+}
