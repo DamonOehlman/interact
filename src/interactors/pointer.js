@@ -20,7 +20,7 @@ function getOffset(obj) {
 } // getOffset
 
 function matchTarget(evt, targetElement) {
-    var targ = evt.target ? evt.target : evt.srcElement,
+    var targ = evt.target || evt.srcElement,
         targClass = targ.className;
     
     // while we have a target, and that target is not the target element continue
