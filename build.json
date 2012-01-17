@@ -1,6 +1,0 @@
-{
-    "aliases": {
-        "cog": "github://sidelab/cog/cogs/$1",
-        "eve": "github://DmitryBaranovskiy/eve/eve.js"
-    }
-}

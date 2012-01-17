@@ -15,7 +15,8 @@
   "dependencies": {
   },
   "devDependencies": {
-    "interleave": ">= 0.1.0"
+    "interleave": ">= 0.1.0",
+    "uglify-js": "*"
   },
   "repository": {
     "type": "git",
