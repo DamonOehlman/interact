@@ -1,12 +1,7 @@
-var interleave = require('interleave'),
-    aliases = {
-        cog: 'github://DamonOehlman/cog/cogs/',
-        eve: 'github://DmitryBaranovskiy/eve/eve.js'
-    };
+var interleave = require('interleave');
 
 // build each of the builds
 interleave('src/', {
     path: 'dist',
-    aliases: aliases,
     after: ['uglify']
 });
