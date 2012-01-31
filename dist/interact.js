@@ -1,12 +1,12 @@
 // ┌──────────────────────────────────────────────────────────────────────────────────────┐ \\
-// │ Eve 0.3.3 - JavaScript Events Library                                                │ \\
+// │ Eve 0.3.4 - JavaScript Events Library                                                │ \\
 // ├──────────────────────────────────────────────────────────────────────────────────────┤ \\
 // │ Copyright (c) 2008-2011 Dmitry Baranovskiy (http://dmitry.baranovskiy.com/)          │ \\
 // │ Licensed under the MIT (http://www.opensource.org/licenses/mit-license.php) license. │ \\
 // └──────────────────────────────────────────────────────────────────────────────────────┘ \\
 
 (function (glob) {
-    var version = "0.3.3",
+    var version = "0.3.4",
         has = "hasOwnProperty",
         separator = /[\.\/]/,
         wildcard = "*",
@@ -42,6 +42,7 @@
                 indexed = [],
                 queue = {},
                 out = [],
+                ce = current_event,
                 errors = [];
             current_event = name;
             stop = 0;
@@ -66,16 +67,14 @@
                     if (l.zIndex == indexed[z]) {
                         out.push(l.apply(scope, args));
                         if (stop) {
-                            stop = oldstop;
-                            return out;
+                            break;
                         }
                         do {
                             z++;
                             l = queue[indexed[z]];
                             l && out.push(l.apply(scope, args));
                             if (stop) {
-                                stop = oldstop;
-                                return out;
+                                break;
                             }
                         } while (l)
                     } else {
@@ -84,12 +83,12 @@
                 } else {
                     out.push(l.apply(scope, args));
                     if (stop) {
-                        stop = oldstop;
-                        return out;
+                        break;
                     }
                 }
             }
             stop = oldstop;
+            current_event = ce;
             return out.length ? out : null;
         };
     /*\
@@ -291,7 +290,6 @@
         var f2 = function () {
             var res = f.apply(this, arguments);
             eve.unbind(name, f2);
-
             return res;
         };
         return eve.on(name, f2);
@@ -306,8 +304,7 @@
     eve.toString = function () {
         return "You are running Eve " + version;
     };
-    (typeof module != "undefined" && module.exports) ? (module.exports = eve) :
-        (typeof define != "undefined" ? (define('eve', [], function() { return eve; })) : (glob.eve = eve));
+    (typeof module != "undefined" && module.exports) ? (module.exports = eve) : (typeof define != "undefined" ? (define("eve", [], function() { return eve; })) : (glob.eve = eve));
 })(this);
 
 
