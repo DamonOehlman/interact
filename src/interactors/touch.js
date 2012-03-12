@@ -20,16 +20,16 @@ var TouchHandler = function(targetElement, opts) {
         EMPTY_TOUCH_DATA = {
             x: 0,
             y: 0
-        };
+        },
 
-    // define the touch modes
-    var TOUCH_MODE_UNKNOWN = 0,
+        // define the touch modes
+        TOUCH_MODE_UNKNOWN = 0,
         TOUCH_MODE_TAP = 1,
         TOUCH_MODE_MOVE = 2,
-        TOUCH_MODE_PINCH = 3;    
-    
-    // initialise variables
-    var aggressiveCapture = opts.aggressiveCapture,
+        TOUCH_MODE_PINCH = 3,
+        
+        // initialise variables
+        aggressiveCapture = opts.aggressiveCapture,
         offset,
         touchMode,
         touchDown = false,

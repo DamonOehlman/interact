@@ -1,13 +1,13 @@
 {
   "name": "interact",
-  "description": "Pointer Events Abstraction",
+  "description": "Access Touch and Mouse Events in a standard way",
   "author": "Damon Oehlman <damon.oehlman@sidelab.com>",
   "tags": [
     "mouse",
     "touch",
     "pointer"
   ],
-  "version": "0.3.1",
+  "version": "1.1.0",
   "main": "./interact.js",
   "engines": {
     "node": ">= 0.4.x < 0.7.0"
@@ -15,7 +15,7 @@
   "dependencies": {
   },
   "devDependencies": {
-    "interleave": ">= 0.1.0",
+    "interleave": "0.2.x",
     "uglify-js": "*"
   },
   "repository": {

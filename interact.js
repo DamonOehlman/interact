@@ -1,7 +1,9 @@
-// Interact 0.3.0 - Mouse and Touch Handling
-// Copyright (c) 2010-2011 Damon Oehlman (damon.oehlman -at- sidelab.com)
-// Licensed under the MIT (http://www.opensource.org/licenses/mit-license.php) license
-var Interact = INTERACT = (function() {
+// interact 1.1.0
+// ────────────────────────────────────────────────────────────────────────────────────────
+// Access Touch and Mouse Events in a standard way
+// ────────────────────────────────────────────────────────────────────────────────────────
+
+(function (glob) {
     // initialise variables
     var interactors = [],
         reLastChunk = /.*\.(.*)$/,
@@ -89,7 +91,7 @@ var Interact = INTERACT = (function() {
     } // register
     
     /*\
-     * Interact.watch
+     * interact
      [ function ]
      **
      * Watch a particular DOM element for interaction events
@@ -100,7 +102,7 @@ var Interact = INTERACT = (function() {
      - opts (object) any specific capture options
      - caps (object) device capability overrides
     \*/
-    function watch(target, opts, caps) {
+    function interact(target, opts, caps) {
         var handlers;
         
         // if the target is a string, then look for the element
@@ -126,6 +128,12 @@ var Interact = INTERACT = (function() {
         for (var ii = 0; ii < handlers.length; ii++) {
             handlers[ii].call(target, target, opts);
         } // for
+        
+        return {
+            on: function(name, handler) {
+                eve.on('interact.pointer.' + name, handler);
+            }
+        };
     } // watch
     
     /* common pointer (mouse, touch, etc) functions */
@@ -425,16 +433,16 @@ var Interact = INTERACT = (function() {
             EMPTY_TOUCH_DATA = {
                 x: 0,
                 y: 0
-            };
+            },
     
-        // define the touch modes
-        var TOUCH_MODE_UNKNOWN = 0,
+            // define the touch modes
+            TOUCH_MODE_UNKNOWN = 0,
             TOUCH_MODE_TAP = 1,
             TOUCH_MODE_MOVE = 2,
-            TOUCH_MODE_PINCH = 3;    
-        
-        // initialise variables
-        var aggressiveCapture = opts.aggressiveCapture,
+            TOUCH_MODE_PINCH = 3,
+            
+            // initialise variables
+            aggressiveCapture = opts.aggressiveCapture,
             offset,
             touchMode,
             touchDown = false,
@@ -778,8 +786,8 @@ var Interact = INTERACT = (function() {
         } // if
     });
     
-    return {
-        register: register,
-        watch: watch
-    };
-})();
+    interact.register = register;
+    interact.watch = interact;
+    
+    (typeof module != "undefined" && module.exports) ? (module.exports = interact) : (typeof define != "undefined" ? (define("interact", [], function() { return interact; })) : (glob.interact = interact));
+})(this);
