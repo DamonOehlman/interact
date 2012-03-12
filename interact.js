@@ -90,19 +90,7 @@
         interactors.push(opts);
     } // register
     
-    /*\
-     * interact
-     [ function ]
-     **
-     * Watch a particular DOM element for interaction events
-     **
-     > Arguments
-     **
-     - target (DOMElement) the element in the DOM to monitor for events
-     - opts (object) any specific capture options
-     - caps (object) device capability overrides
-    \*/
-    function interact(target, opts, caps) {
+    function Interactor(target, opts, caps) {
         var handlers;
         
         // if the target is a string, then look for the element
@@ -128,12 +116,15 @@
         for (var ii = 0; ii < handlers.length; ii++) {
             handlers[ii].call(target, target, opts);
         } // for
-        
-        return {
-            on: function(name, handler) {
-                eve.on('interact.pointer.' + name, handler);
-            }
-        };
+    }
+    
+    Interactor.prototype.on = function(name, handler) {
+        eve.on('interact.pointer.' + name, handler);
+        return this;
+    };
+    
+    function interact(target, opts, caps) {
+        return new Interactor(target, opts, caps);
     } // watch
     
     /* common pointer (mouse, touch, etc) functions */
