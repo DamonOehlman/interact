@@ -26,7 +26,7 @@ eve.on('interact.pointer.up', function(evt, absXY, relXY) {
 });
 
 // watch the specified target
-INTERACT.watch('targetElementId');
+interact.watch('targetElementId');
 ```
 
 Through the way [eve](https://github.com/DmitryBaranovskiy/eve) behaves, the above event handlers would relay events captured for any _watched_ elemnet.  If you want to limit the event capture to a specific event then use the following syntax:
