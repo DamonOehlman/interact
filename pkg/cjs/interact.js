@@ -194,7 +194,7 @@ var MouseHandler = function(targetElement, opts) {
         start,
         currentX,
         currentY,
-        evtPointer = 'interact.pointer',
+        evtPointer = 'interact',
         evtTargetId = targetElement && targetElement.id ? '.' + targetElement.id : '',
         evtPointerDown = evtPointer + '.down' + evtTargetId,
         evtPointerMove = evtPointer + '.move' + evtTargetId,
@@ -272,7 +272,7 @@ var MouseHandler = function(targetElement, opts) {
         currentY = pagePos.y;
         
         if (matchTarget(evt, targetElement)) {
-            triggerCurrent(evt, 'interact.pointer.'+ (buttonDown ? 'move' : 'hover'));
+            triggerCurrent(evt, 'interact.'+ (buttonDown ? 'move' : 'hover'));
         } // if
     } // mouseMove
 
@@ -283,7 +283,7 @@ var MouseHandler = function(targetElement, opts) {
             // if the button was released on this element, then trigger the event
             if (matchTarget(evt, targetElement)) {
                 targetElement.style.cursor = 'default';
-                triggerCurrent(evt, 'interact.pointer.up');
+                triggerCurrent(evt, 'interact.up');
             } // if
         } // if
     } // mouseUp
@@ -437,7 +437,7 @@ var TouchHandler = function(targetElement, opts) {
         touchesLast,
         detailedEvents = opts.detailed,
         scaling = 1,
-        evtPointer = 'interact.pointer',
+        evtPointer = 'interact',
         evtTargetId = targetElement && targetElement.id ? '.' + targetElement.id : '',
         evtPointerDown = evtPointer + '.down' + evtTargetId,
         evtPointerMultiDown = evtPointer + '.multi.down' + evtTargetId,
@@ -729,7 +729,7 @@ register('pointer', {
 });
 
 // add some helpful wrappers
-eve.on('interact.pointer.down', function(evt, absXY, relXY) {
+eve.on('interact.down', function(evt, absXY, relXY) {
     var ctrlName = eve.nt().replace(reLastChunk, '$1');
     
     if (ctrlName) {
@@ -744,7 +744,7 @@ eve.on('interact.pointer.down', function(evt, absXY, relXY) {
 });    
 
 // handle pointer move events
-eve.on('interact.pointer.move', function(evt, absXY, relXY) {
+eve.on('interact.move', function(evt, absXY, relXY) {
     var ctrlName = eve.nt().replace(reLastChunk, '$1');
     
     if (ctrlName && lastXY[ctrlName]) {
@@ -762,7 +762,7 @@ eve.on('interact.pointer.move', function(evt, absXY, relXY) {
     } // if
 });
 
-eve.on('interact.pointer.up', function(evt, absXY, relXY) {
+eve.on('interact.up', function(evt, absXY, relXY) {
     var ctrlName = eve.nt().replace(reLastChunk, '$1');
     
     if (this === downTarget) {

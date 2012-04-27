@@ -14,7 +14,7 @@ var MouseHandler = function(targetElement, opts) {
         start,
         currentX,
         currentY,
-        evtPointer = 'interact.pointer',
+        evtPointer = 'interact',
         evtTargetId = targetElement && targetElement.id ? '.' + targetElement.id : '',
         evtPointerDown = evtPointer + '.down' + evtTargetId,
         evtPointerMove = evtPointer + '.move' + evtTargetId,
@@ -92,7 +92,7 @@ var MouseHandler = function(targetElement, opts) {
         currentY = pagePos.y;
         
         if (matchTarget(evt, targetElement)) {
-            triggerCurrent(evt, 'interact.pointer.'+ (buttonDown ? 'move' : 'hover'));
+            triggerCurrent(evt, 'interact.'+ (buttonDown ? 'move' : 'hover'));
         } // if
     } // mouseMove
 
@@ -103,7 +103,7 @@ var MouseHandler = function(targetElement, opts) {
             // if the button was released on this element, then trigger the event
             if (matchTarget(evt, targetElement)) {
                 targetElement.style.cursor = 'default';
-                triggerCurrent(evt, 'interact.pointer.up');
+                triggerCurrent(evt, 'interact.up');
             } // if
         } // if
     } // mouseUp

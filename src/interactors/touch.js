@@ -39,7 +39,7 @@ var TouchHandler = function(targetElement, opts) {
         touchesLast,
         detailedEvents = opts.detailed,
         scaling = 1,
-        evtPointer = 'interact.pointer',
+        evtPointer = 'interact',
         evtTargetId = targetElement && targetElement.id ? '.' + targetElement.id : '',
         evtPointerDown = evtPointer + '.down' + evtTargetId,
         evtPointerMultiDown = evtPointer + '.multi.down' + evtTargetId,

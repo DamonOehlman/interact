@@ -128,7 +128,7 @@ function interact(target, opts, caps) {
 //= interactors/touch
 
 // add some helpful wrappers
-eve.on('interact.pointer.down', function(evt, absXY, relXY) {
+eve.on('interact.down', function(evt, absXY, relXY) {
     var ctrlName = eve.nt().replace(reLastChunk, '$1');
     
     if (ctrlName) {
@@ -143,7 +143,7 @@ eve.on('interact.pointer.down', function(evt, absXY, relXY) {
 });    
 
 // handle pointer move events
-eve.on('interact.pointer.move', function(evt, absXY, relXY) {
+eve.on('interact.move', function(evt, absXY, relXY) {
     var ctrlName = eve.nt().replace(reLastChunk, '$1');
     
     if (ctrlName && lastXY[ctrlName]) {
@@ -161,7 +161,7 @@ eve.on('interact.pointer.move', function(evt, absXY, relXY) {
     } // if
 });
 
-eve.on('interact.pointer.up', function(evt, absXY, relXY) {
+eve.on('interact.up', function(evt, absXY, relXY) {
     var ctrlName = eve.nt().replace(reLastChunk, '$1');
     
     if (this === downTarget) {

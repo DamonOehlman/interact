@@ -6,22 +6,30 @@ Events are distributed using [eve](https://github.com/DmitryBaranovskiy/eve).
 
 _Interact is distributed under an [MIT License](http://www.opensource.org/licenses/mit-license.php)_
 
+## NOTE: Breaking Changes
+
+For the purposes of more terse event names, the following events have been renamed:
+
+- interact.pointer.down => interact.down
+- interact.pointer.move => interact.move
+- interact.pointer.up   => interact.up
+
 ## Example Usage
 
 Handling simple down, move, and up events is easy:
 
 ```js
-eve.on('interact.pointer.down', function(evt, absXY, relXY) {
+eve.on('interact.down', function(evt, absXY, relXY) {
 	console.log('pointer down @ ', absXY);
 });
 
 // handle pointer move events
-eve.on('interact.pointer.move', function(evt, absXY, relXY) {
+eve.on('interact.move', function(evt, absXY, relXY) {
 	console.log('pointer move @ ', absXY);
 });
 
 // handle pointer up events
-eve.on('interact.pointer.up', function(evt, absXY, relXY) {
+eve.on('interact.up', function(evt, absXY, relXY) {
 	console.log('pointer up @ ', absXY);
 });
 
