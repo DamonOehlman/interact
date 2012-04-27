@@ -4,4 +4,4 @@ var demoCanvas = $('#demoCanvas')[0],
 eve.on('interact.tap', function(evt, absXY, relXY) {
 });
 
-INTERACT.watch(demoCanvas);
+interact.watch(demoCanvas);

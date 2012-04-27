@@ -48,4 +48,4 @@ blackHole.src = 'http://estock.s3.amazonaws.com/wwtfc1/24/88/31/estock_commonswi
 blackHole.onload = initImage;
 
 // watch the demo canvas
-INTERACT.watch(demoCanvas);
+interact.watch(demoCanvas);

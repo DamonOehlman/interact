@@ -27,4 +27,4 @@ function drawImage() {
 blackHole.src = 'http://estock.s3.amazonaws.com/wwtfc1/24/88/31/estock_commonswiki_248831_o.jpg';
 blackHole.onload = initImage;
 
-INTERACT.watch(demoCanvas);
+interact.watch(demoCanvas);

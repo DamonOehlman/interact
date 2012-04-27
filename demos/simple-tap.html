@@ -299,10 +299,11 @@ ul.buttons li a.run {
   <canvas id="demoCanvas" width="300" height="300"></canvas>
   
 
-  <script src="../dist/interact.js"></script>
+  <script src="_demogen/js/eve.js">
   <script src="_demogen/js/keymaster.min.js"></script>
   <script src="_demogen/js/jquery-1.6.2.min.js"></script>
   <script src="_demogen/js/runner.js"></script>
+  <script src="../pkg/oldschool/interact.js"></script>
   <script>
   var settings = {"theme":"dawn","mode":"javascript"};
 
@@ -342,7 +343,7 @@ ul.buttons li a.run {
 eve.on('interact.tap', function(evt, absXY, relXY) {
 });
 
-INTERACT.watch(demoCanvas);</textarea>
+interact.watch(demoCanvas);</textarea>
 <script defer="defer">
 var editor = CodeMirror.fromTextArea(document.getElementById("editor"), {
   mode: 'javascript',
@@ -369,6 +370,6 @@ $('ul.buttons a').each(function() {
 eve.on('interact.tap', function(evt, absXY, relXY) {
 });
 
-INTERACT.watch(demoCanvas);</script>
+interact.watch(demoCanvas);</script>
 </body>
 </html>

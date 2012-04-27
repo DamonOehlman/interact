@@ -17,4 +17,4 @@ eve.on('interact.pointer.up', function(evt, absXY, relXY) {
     context.closePath();
 });
 
-INTERACT.watch('demoCanvas');
+interact.watch('demoCanvas');

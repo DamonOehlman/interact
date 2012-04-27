@@ -29,6 +29,6 @@ eve.on('pointer.multi.move', function(absXY, relXY) {
     } // while
 });
 
-INTERACT.watch(demoCanvas, {
+interact.watch(demoCanvas, {
     detailed: true
 });

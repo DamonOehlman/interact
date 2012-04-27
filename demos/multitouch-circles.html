@@ -299,10 +299,11 @@ ul.buttons li a.run {
   <canvas id="demoCanvas" width="300" height="300"></canvas>
   
 
-  <script src="../dist/interact.js"></script>
+  <script src="_demogen/js/eve.js">
   <script src="_demogen/js/keymaster.min.js"></script>
   <script src="_demogen/js/jquery-1.6.2.min.js"></script>
   <script src="_demogen/js/runner.js"></script>
+  <script src="../pkg/oldschool/interact.js"></script>
   <script>
   var settings = {"theme":"dawn","mode":"javascript"};
 
@@ -367,7 +368,7 @@ eve.on('pointer.multi.move', function(absXY, relXY) {
     } // while
 });
 
-INTERACT.watch(demoCanvas, {
+interact.watch(demoCanvas, {
     detailed: true
 });</textarea>
 <script defer="defer">
@@ -421,7 +422,7 @@ eve.on('pointer.multi.move', function(absXY, relXY) {
     } // while
 });
 
-INTERACT.watch(demoCanvas, {
+interact.watch(demoCanvas, {
     detailed: true
 });</script>
 </body>
