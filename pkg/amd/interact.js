@@ -290,7 +290,7 @@ define('interact', ['shim[js#Array.indexOf]', 'eve'], function(shim[js#Array.ind
       } // mouseMove
   
       function handleMouseUp(evt) {
-          if (buttonDown && isLeftButton(evt)) {
+          if (buttonDown && isLeftButton(evt) && opts.events.up) {
               buttonDown = false;
               
               // if the button was released on this element, then trigger the event
@@ -384,7 +384,7 @@ define('interact', ['shim[js#Array.indexOf]', 'eve'], function(shim[js#Array.ind
       } // unbind
       
       // wire up the event handlers
-      if (opts.events.down) {
+      if (opts.events.down || opts.events.up) {
           opts.binder('mousedown', handleMouseDown);
       }
       
@@ -690,7 +690,7 @@ define('interact', ['shim[js#Array.indexOf]', 'eve'], function(shim[js#Array.ind
       } // handleTouchMove
       
       function handleTouchEnd(evt) {
-          if (matchTarget(evt, targetElement)) {
+          if (matchTarget(evt, targetElement) && opts.events.up) {
               var changedTouches = getTouchData(evt, 'changedTouches'),
                   offsetTouches = copyTouches(changedTouches, offset.left, offset.top),
                   evtArgs = [targetElement, evt, changedTouches, offsetTouches];
@@ -733,7 +733,7 @@ define('interact', ['shim[js#Array.indexOf]', 'eve'], function(shim[js#Array.ind
       } // unbind
       
       // wire up the event handlers
-      if (opts.events.down) {
+      if (opts.events.down || opts.events.up) {
           opts.binder('touchstart', handleTouchStart);
       }
       

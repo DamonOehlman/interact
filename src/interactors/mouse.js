@@ -97,7 +97,7 @@ var MouseHandler = function(targetElement, opts) {
     } // mouseMove
 
     function handleMouseUp(evt) {
-        if (buttonDown && isLeftButton(evt)) {
+        if (buttonDown && isLeftButton(evt) && opts.events.up) {
             buttonDown = false;
             
             // if the button was released on this element, then trigger the event
@@ -191,7 +191,7 @@ var MouseHandler = function(targetElement, opts) {
     } // unbind
     
     // wire up the event handlers
-    if (opts.events.down) {
+    if (opts.events.down || opts.events.up) {
         opts.binder('mousedown', handleMouseDown);
     }
     
