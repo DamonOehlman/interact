@@ -1,8 +1,9 @@
-// req: eve
+// req: shim[js#Array.indexOf], eve
 
 // initialise variables
 var interactors = [],
     reLastChunk = /.*\.(.*)$/,
+    supportedEvents = ['down', 'move', 'up'],
     lastXY = {};
 
 /* internal functions */
@@ -87,7 +88,7 @@ function register(typeName, opts) {
 } // register
 
 function Interactor(target, opts, caps) {
-    var handlers;
+    var handlers, events = {}, ii;
     
     // if the target is a string, then look for the element
     if (typeof target == 'string') {
@@ -97,6 +98,20 @@ function Interactor(target, opts, caps) {
     // initialise options
     opts = opts || {};
     opts.isIE = typeof window.attachEvent != 'undefined';
+    
+    // initialise the namespace
+    this.ns = opts.ns = opts.ns || 'interact';
+    
+    // initialise the events that we will monitor
+    opts.events = opts.events || supportedEvents;
+    
+    // convert the events array into an object
+    for (ii = 0; ii < supportedEvents.length; ii++) {
+        events[supportedEvents[ii]] = opts.events.indexOf(supportedEvents[ii]) >= 0;
+    }
+    
+    // copy the events object into the opts
+    opts.events = events;
     
     // init caps
     caps = caps || {};
@@ -108,14 +123,13 @@ function Interactor(target, opts, caps) {
     
     // initialise the handlers
     handlers = getHandlers(opts.types, caps);
-    
-    for (var ii = 0; ii < handlers.length; ii++) {
+    for (ii = 0; ii < handlers.length; ii++) {
         handlers[ii].call(target, target, opts);
     } // for
 }
 
 Interactor.prototype.on = function(name, handler) {
-    eve.on('interact.pointer.' + name, handler);
+    eve.on(this.ns + '.' + name, handler);
     return this;
 };
 
@@ -128,6 +142,7 @@ function interact(target, opts, caps) {
 //= interactors/touch
 
 // add some helpful wrappers
+// TODO: make work with different event namespaces
 eve.on('interact.down', function(evt, absXY, relXY) {
     var ctrlName = eve.nt().replace(reLastChunk, '$1');
     

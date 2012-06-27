@@ -14,12 +14,12 @@ var MouseHandler = function(targetElement, opts) {
         start,
         currentX,
         currentY,
-        evtPointer = 'interact',
+        evtPointer = opts.ns,
         evtTargetId = targetElement && targetElement.id ? '.' + targetElement.id : '',
         evtPointerDown = evtPointer + '.down' + evtTargetId,
         evtPointerMove = evtPointer + '.move' + evtTargetId,
         evtPointerUp = evtPointer + '.up' + evtTargetId,
-        evtZoomWheel = 'interact.zoom.wheel' + evtTargetId;
+        evtZoomWheel = opts.ns + '.zoom.wheel' + evtTargetId;
     
     /* internal functions */
     
@@ -29,7 +29,7 @@ var MouseHandler = function(targetElement, opts) {
         }
         else {
             var doc = document.documentElement,
-    			body = document.body;
+            body = document.body;
 
             // code from jquery event handling:
             // https://github.com/jquery/jquery/blob/1.5.1/src/event.js#L493
@@ -49,7 +49,7 @@ var MouseHandler = function(targetElement, opts) {
             var clickXY = getPagePos(evt);
             
             eve(
-                'interact.doubletap' + evtTargetId,
+                evtPointer + '.doubletap' + evtTargetId,
                 targetElement,
                 evt,
                 clickXY, 
@@ -92,7 +92,7 @@ var MouseHandler = function(targetElement, opts) {
         currentY = pagePos.y;
         
         if (matchTarget(evt, targetElement)) {
-            triggerCurrent(evt, 'interact.'+ (buttonDown ? 'move' : 'hover'));
+            triggerCurrent(evt, evtPointer + '.'+ (buttonDown ? 'move' : 'hover'));
         } // if
     } // mouseMove
 
@@ -103,7 +103,7 @@ var MouseHandler = function(targetElement, opts) {
             // if the button was released on this element, then trigger the event
             if (matchTarget(evt, targetElement)) {
                 targetElement.style.cursor = 'default';
-                triggerCurrent(evt, 'interact.up');
+                triggerCurrent(evt, evtPointer + '.up');
             } // if
         } // if
     } // mouseUp
@@ -191,9 +191,18 @@ var MouseHandler = function(targetElement, opts) {
     } // unbind
     
     // wire up the event handlers
-    opts.binder('mousedown', handleMouseDown);
-    opts.binder('mousemove', handleMouseMove);
-    opts.binder('mouseup', handleMouseUp);
+    if (opts.events.down) {
+        opts.binder('mousedown', handleMouseDown);
+    }
+    
+    if (opts.events.move) {
+        opts.binder('mousemove', handleMouseMove);
+    }
+    
+    if (opts.events.up) {
+        opts.binder('mouseup', handleMouseUp);
+    }
+    
     opts.binder('dblclick', handleDoubleClick);
     
     // handle drag start and select start events to ensure moves work on ie

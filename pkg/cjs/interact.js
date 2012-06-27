@@ -1,9 +1,11 @@
-var eve = require('eve');
+var shim[js#Array.indexOf] = require('shim[js#Array.indexOf]'),
+    eve = require('eve');
 
 
 // initialise variables
 var interactors = [],
     reLastChunk = /.*\.(.*)$/,
+    supportedEvents = ['down', 'move', 'up'],
     lastXY = {};
 
 /* internal functions */
@@ -88,7 +90,7 @@ function register(typeName, opts) {
 } // register
 
 function Interactor(target, opts, caps) {
-    var handlers;
+    var handlers, events = {}, ii;
     
     // if the target is a string, then look for the element
     if (typeof target == 'string') {
@@ -98,6 +100,20 @@ function Interactor(target, opts, caps) {
     // initialise options
     opts = opts || {};
     opts.isIE = typeof window.attachEvent != 'undefined';
+    
+    // initialise the namespace
+    this.ns = opts.ns = opts.ns || 'interact';
+    
+    // initialise the events that we will monitor
+    opts.events = opts.events || supportedEvents;
+    
+    // convert the events array into an object
+    for (ii = 0; ii < supportedEvents.length; ii++) {
+        events[supportedEvents[ii]] = opts.events.indexOf(supportedEvents[ii]) >= 0;
+    }
+    
+    // copy the events object into the opts
+    opts.events = events;
     
     // init caps
     caps = caps || {};
@@ -109,14 +125,13 @@ function Interactor(target, opts, caps) {
     
     // initialise the handlers
     handlers = getHandlers(opts.types, caps);
-    
-    for (var ii = 0; ii < handlers.length; ii++) {
+    for (ii = 0; ii < handlers.length; ii++) {
         handlers[ii].call(target, target, opts);
     } // for
 }
 
 Interactor.prototype.on = function(name, handler) {
-    eve.on('interact.pointer.' + name, handler);
+    eve.on(this.ns + '.' + name, handler);
     return this;
 };
 
@@ -194,12 +209,12 @@ var MouseHandler = function(targetElement, opts) {
         start,
         currentX,
         currentY,
-        evtPointer = 'interact',
+        evtPointer = opts.ns,
         evtTargetId = targetElement && targetElement.id ? '.' + targetElement.id : '',
         evtPointerDown = evtPointer + '.down' + evtTargetId,
         evtPointerMove = evtPointer + '.move' + evtTargetId,
         evtPointerUp = evtPointer + '.up' + evtTargetId,
-        evtZoomWheel = 'interact.zoom.wheel' + evtTargetId;
+        evtZoomWheel = opts.ns + '.zoom.wheel' + evtTargetId;
     
     /* internal functions */
     
@@ -209,7 +224,7 @@ var MouseHandler = function(targetElement, opts) {
         }
         else {
             var doc = document.documentElement,
-    			body = document.body;
+            body = document.body;
 
             // code from jquery event handling:
             // https://github.com/jquery/jquery/blob/1.5.1/src/event.js#L493
@@ -229,7 +244,7 @@ var MouseHandler = function(targetElement, opts) {
             var clickXY = getPagePos(evt);
             
             eve(
-                'interact.doubletap' + evtTargetId,
+                evtPointer + '.doubletap' + evtTargetId,
                 targetElement,
                 evt,
                 clickXY, 
@@ -272,7 +287,7 @@ var MouseHandler = function(targetElement, opts) {
         currentY = pagePos.y;
         
         if (matchTarget(evt, targetElement)) {
-            triggerCurrent(evt, 'interact.'+ (buttonDown ? 'move' : 'hover'));
+            triggerCurrent(evt, evtPointer + '.'+ (buttonDown ? 'move' : 'hover'));
         } // if
     } // mouseMove
 
@@ -283,7 +298,7 @@ var MouseHandler = function(targetElement, opts) {
             // if the button was released on this element, then trigger the event
             if (matchTarget(evt, targetElement)) {
                 targetElement.style.cursor = 'default';
-                triggerCurrent(evt, 'interact.up');
+                triggerCurrent(evt, evtPointer + '.up');
             } // if
         } // if
     } // mouseUp
@@ -371,9 +386,18 @@ var MouseHandler = function(targetElement, opts) {
     } // unbind
     
     // wire up the event handlers
-    opts.binder('mousedown', handleMouseDown);
-    opts.binder('mousemove', handleMouseMove);
-    opts.binder('mouseup', handleMouseUp);
+    if (opts.events.down) {
+        opts.binder('mousedown', handleMouseDown);
+    }
+    
+    if (opts.events.move) {
+        opts.binder('mousemove', handleMouseMove);
+    }
+    
+    if (opts.events.up) {
+        opts.binder('mouseup', handleMouseUp);
+    }
+    
     opts.binder('dblclick', handleDoubleClick);
     
     // handle drag start and select start events to ensure moves work on ie
@@ -437,7 +461,7 @@ var TouchHandler = function(targetElement, opts) {
         touchesLast,
         detailedEvents = opts.detailed,
         scaling = 1,
-        evtPointer = 'interact',
+        evtPointer = opts.ns,
         evtTargetId = targetElement && targetElement.id ? '.' + targetElement.id : '',
         evtPointerDown = evtPointer + '.down' + evtTargetId,
         evtPointerMultiDown = evtPointer + '.multi.down' + evtTargetId,
@@ -445,7 +469,7 @@ var TouchHandler = function(targetElement, opts) {
         evtPointerMultiMove = evtPointer + '.multi.move' + evtTargetId,
         evtPointerUp = evtPointer + '.up' + evtTargetId,
         evtPointerMultiUp = evtPointer + '.multi.up' + evtTargetId,
-        evtZoomPinch = 'interact.zoom.pinch' + evtTargetId;
+        evtZoomPinch = evtPointer + '.zoom.pinch' + evtTargetId;
 
     /* internal functions */
     
@@ -711,9 +735,17 @@ var TouchHandler = function(targetElement, opts) {
     } // unbind
     
     // wire up the event handlers
-    opts.binder('touchstart', handleTouchStart);
-    opts.binder('touchmove', handleTouchMove);
-    opts.binder('touchend', handleTouchEnd);
+    if (opts.events.down) {
+        opts.binder('touchstart', handleTouchStart);
+    }
+    
+    if (opts.events.move) {
+        opts.binder('touchmove', handleTouchMove);
+    }
+    
+    if (opts.events.up) {
+        opts.binder('touchend', handleTouchEnd);
+    }
     
     return {
         unbind: unbind
@@ -729,6 +761,7 @@ register('pointer', {
 });
 
 // add some helpful wrappers
+// TODO: make work with different event namespaces
 eve.on('interact.down', function(evt, absXY, relXY) {
     var ctrlName = eve.nt().replace(reLastChunk, '$1');
     

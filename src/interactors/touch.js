@@ -39,7 +39,7 @@ var TouchHandler = function(targetElement, opts) {
         touchesLast,
         detailedEvents = opts.detailed,
         scaling = 1,
-        evtPointer = 'interact',
+        evtPointer = opts.ns,
         evtTargetId = targetElement && targetElement.id ? '.' + targetElement.id : '',
         evtPointerDown = evtPointer + '.down' + evtTargetId,
         evtPointerMultiDown = evtPointer + '.multi.down' + evtTargetId,
@@ -47,7 +47,7 @@ var TouchHandler = function(targetElement, opts) {
         evtPointerMultiMove = evtPointer + '.multi.move' + evtTargetId,
         evtPointerUp = evtPointer + '.up' + evtTargetId,
         evtPointerMultiUp = evtPointer + '.multi.up' + evtTargetId,
-        evtZoomPinch = 'interact.zoom.pinch' + evtTargetId;
+        evtZoomPinch = evtPointer + '.zoom.pinch' + evtTargetId;
 
     /* internal functions */
     
@@ -313,9 +313,17 @@ var TouchHandler = function(targetElement, opts) {
     } // unbind
     
     // wire up the event handlers
-    opts.binder('touchstart', handleTouchStart);
-    opts.binder('touchmove', handleTouchMove);
-    opts.binder('touchend', handleTouchEnd);
+    if (opts.events.down) {
+        opts.binder('touchstart', handleTouchStart);
+    }
+    
+    if (opts.events.move) {
+        opts.binder('touchmove', handleTouchMove);
+    }
+    
+    if (opts.events.up) {
+        opts.binder('touchend', handleTouchEnd);
+    }
     
     return {
         unbind: unbind
