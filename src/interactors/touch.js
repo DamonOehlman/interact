@@ -270,7 +270,7 @@ var TouchHandler = function(targetElement, opts) {
     } // handleTouchMove
     
     function handleTouchEnd(evt) {
-        if (matchTarget(evt, targetElement) && opts.events.up) {
+        if (matchTarget(evt, targetElement)) {
             var changedTouches = getTouchData(evt, 'changedTouches'),
                 offsetTouches = copyTouches(changedTouches, offset.left, offset.top),
                 evtArgs = [targetElement, evt, changedTouches, offsetTouches];
@@ -313,7 +313,7 @@ var TouchHandler = function(targetElement, opts) {
     } // unbind
     
     // wire up the event handlers
-    if (opts.events.down || opts.events.up) {
+    if (opts.events.down) {
         opts.binder('touchstart', handleTouchStart);
     }
     
