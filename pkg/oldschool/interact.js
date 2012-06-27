@@ -264,7 +264,10 @@
                   var pagePos = getPagePos(evt);
                   
                   // update the cursor and prevent the default
-                  targetElement.style.cursor = 'move';
+                  if (typeof targetElement.style != 'undefined') {
+                      targetElement.style.cursor = 'move';
+                  }
+                  
                   start = point(pagePos.x, pagePos.y);
                   
                   // trigger the pointer down event
@@ -292,12 +295,17 @@
       } // mouseMove
   
       function handleMouseUp(evt) {
-          if (buttonDown && isLeftButton(evt) && opts.events.up) {
+          // 27/06/2012 (DJO): buttonDown state no longer checked to determine whether or not the event
+          // should be fired
+          if (isLeftButton(evt)) {
               buttonDown = false;
               
               // if the button was released on this element, then trigger the event
               if (matchTarget(evt, targetElement)) {
-                  targetElement.style.cursor = 'default';
+                  if (typeof targetElement.style != 'undefined') {
+                      targetElement.style.cursor = 'default';
+                  }
+                  
                   triggerCurrent(evt, evtPointer + '.up');
               } // if
           } // if
@@ -386,7 +394,7 @@
       } // unbind
       
       // wire up the event handlers
-      if (opts.events.down || opts.events.up) {
+      if (opts.events.down) {
           opts.binder('mousedown', handleMouseDown);
       }
       
@@ -692,7 +700,7 @@
       } // handleTouchMove
       
       function handleTouchEnd(evt) {
-          if (matchTarget(evt, targetElement) && opts.events.up) {
+          if (matchTarget(evt, targetElement)) {
               var changedTouches = getTouchData(evt, 'changedTouches'),
                   offsetTouches = copyTouches(changedTouches, offset.left, offset.top),
                   evtArgs = [targetElement, evt, changedTouches, offsetTouches];
@@ -735,7 +743,7 @@
       } // unbind
       
       // wire up the event handlers
-      if (opts.events.down || opts.events.up) {
+      if (opts.events.down) {
           opts.binder('touchstart', handleTouchStart);
       }
       
