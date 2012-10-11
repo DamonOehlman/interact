@@ -201,6 +201,7 @@ var MouseHandler = function(targetElement, opts) {
     // wire up the event handlers
     if (opts.events.down) {
         opts.binder('mousedown', handleMouseDown);
+        opts.binder('dblclick', handleDoubleClick);
     }
     
     if (opts.events.move) {
@@ -211,15 +212,15 @@ var MouseHandler = function(targetElement, opts) {
         opts.binder('mouseup', handleMouseUp);
     }
     
-    opts.binder('dblclick', handleDoubleClick);
-    
     // handle drag start and select start events to ensure moves work on ie
     opts.binder('selectstart', preventDrag);
     opts.binder('dragstart', preventDrag);
     
-    // bind mouse wheel events
-    opts.binder('mousewheel', handleWheel);
-    opts.binder('DOMMouseScroll', handleWheel);
+    // bind mouse wheel events (if we are handling zoom events)
+    if (opts.events.zoom) {
+        opts.binder('mousewheel', handleWheel);
+        opts.binder('DOMMouseScroll', handleWheel);
+    }
     
     return {
         unbind: unbind

@@ -5,7 +5,7 @@
 // initialise variables
 var interactors = [],
     reLastChunk = /.*\.(.*)$/,
-    supportedEvents = ['down', 'move', 'up'],
+    supportedEvents = ['down', 'move', 'up', 'zoom'],
     lastXY = {};
 
 /* internal functions */

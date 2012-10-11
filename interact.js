@@ -1,6 +1,6 @@
 /*
  * interact v2.0.02.0.0
- * build   => 2012-10-11T23:24:21.868Z
+ * build   => 2012-10-11T23:50:41.520Z
  * 
  * 
  *  
@@ -54,7 +54,7 @@
     // initialise variables
     var interactors = [],
         reLastChunk = /.*\.(.*)$/,
-        supportedEvents = ['down', 'move', 'up'],
+        supportedEvents = ['down', 'move', 'up', 'zoom'],
         lastXY = {};
     
     /* internal functions */
@@ -445,6 +445,7 @@
         // wire up the event handlers
         if (opts.events.down) {
             opts.binder('mousedown', handleMouseDown);
+            opts.binder('dblclick', handleDoubleClick);
         }
         
         if (opts.events.move) {
@@ -455,15 +456,15 @@
             opts.binder('mouseup', handleMouseUp);
         }
         
-        opts.binder('dblclick', handleDoubleClick);
-        
         // handle drag start and select start events to ensure moves work on ie
         opts.binder('selectstart', preventDrag);
         opts.binder('dragstart', preventDrag);
         
-        // bind mouse wheel events
-        opts.binder('mousewheel', handleWheel);
-        opts.binder('DOMMouseScroll', handleWheel);
+        // bind mouse wheel events (if we are handling zoom events)
+        if (opts.events.zoom) {
+            opts.binder('mousewheel', handleWheel);
+            opts.binder('DOMMouseScroll', handleWheel);
+        }
         
         return {
             unbind: unbind
