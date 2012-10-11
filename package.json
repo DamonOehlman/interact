@@ -8,14 +8,9 @@
     "pointer"
   ],
   "version": "2.0.0",
-  "main": "./interact.js",
-  "engines": {
-    "node": ">= 0.4.x < 0.7.0"
-  },
   "dependencies": {},
   "devDependencies": {
-    "interleave": "0.2.x",
-    "uglify-js": "*"
+    "interleave": "0.5.x"
   },
   "repository": {
     "type": "git",

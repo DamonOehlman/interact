@@ -1,4 +1,6 @@
-// req: shim[js#Array.indexOf], eve
+// req: eve
+
+//= github://buildjs/shims/array/indexof.js
 
 // initialise variables
 var interactors = [],
