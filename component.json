@@ -1,0 +1,14 @@
+{
+  "name": "interact",
+  "repo": "DamonOehlman/interact",
+  "description": "Access Touch and Mouse Events in a standard way ",
+  "version": "2.0.1",
+  "keywords": ["touch", "mouse", "events"],
+  "dependencies": {
+    "DamonOehlman/eve": "0.3.x"
+  },
+  "main": "interact.js",
+  "scripts": [
+    "interact.js"
+  ]
+}
