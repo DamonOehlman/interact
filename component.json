@@ -5,7 +5,7 @@
   "version": "2.0.1",
   "keywords": ["touch", "mouse", "events"],
   "dependencies": {
-    "DamonOehlman/eve": "0.3.5"
+    "DamonOehlman/eve": "*"
   },
   "main": "interact.js",
   "scripts": [
