@@ -1,17 +1,15 @@
 {
-  "name": "interact",
+  "name": "interactor",
   "description": "Access Touch and Mouse Events in a standard way",
-  "author": "Damon Oehlman <damon.oehlman@sidelab.com>",
-  "tags": [
+  "author": "Damon Oehlman <damon.oehlman@gmail.com>",
+  "keywords": [
     "mouse",
     "touch",
     "pointer"
   ],
   "version": "2.0.0",
   "dependencies": {},
-  "devDependencies": {
-    "interleave": "0.5.x"
-  },
+  "devDependencies": {},
   "repository": {
     "type": "git",
     "url": "git://github.com/DamonOehlman/interact.git"
@@ -19,6 +17,13 @@
   "bugs": {
     "url": "http://github.com/DamonOehlman/interact/issues"
   },
-  "contributors": [],
-  "optionalDependencies": {}
+  "homepage": "https://github.com/DamonOehlman/interact",
+  "main": "index.js",
+  "directories": {
+    "example": "examples"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "license": "MIT"
 }
