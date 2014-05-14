@@ -8,7 +8,9 @@
     "pointer"
   ],
   "version": "2.0.0",
-  "dependencies": {},
+  "dependencies": {
+    "eve": "~0.4"
+  },
   "devDependencies": {},
   "repository": {
     "type": "git",
